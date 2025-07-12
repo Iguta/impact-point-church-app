@@ -1,60 +1,132 @@
-        // This is a single object that holds all initial editable church data
-        export const initialChurchData = {
-          about: {
-            title: "Our Story & Beliefs",
-            text: "Impact Point Church is a vibrant community dedicated to spreading hope and love. Founded in [Year], we believe in [Core Belief 1], [Core Belief 2], and [Core Belief 3]. Our mission is to [Mission Statement]. We welcome everyone to join us!",
-            imageUrl: "https://placehold.co/800x400/6366F1/FFFFFF?text=Church+Building", // Placeholder image
-          },
-          sermons: [
-            {
-              id: "sermon1",
-              title: "The Power of Forgiveness",
-              speaker: "Pastor John Doe",
-              date: "2024-06-30",
-              description: "A message on the liberating power of forgiveness in our daily lives.",
-              videoLink: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Example YouTube embed link
-              audioLink: "#",
-            },
-            {
-              id: "sermon2",
-              title: "Living a Life of Purpose",
-              speaker: "Guest Speaker Jane Smith",
-              date: "2024-06-23",
-              description: "Exploring what it means to live intentionally and fulfill God's calling.",
-              videoLink: "#",
-              audioLink: "#",
-            },
-          ],
-          events: [
-            {
-              id: "event1",
-              title: "Community Outreach Day",
-              date: "2024-07-15",
-              time: "10:00 AM - 2:00 PM",
-              location: "Local Park",
-              description: "Join us as we serve our community with free food, activities, and support.",
-            },
-            {
-              id: "event2",
-              title: "Youth Summer Camp",
-              date: "2024-08-01",
-              time: "All Day",
-              location: "Camp Grounds",
-              description: "A week of fun, faith, and fellowship for youth aged 12-18.",
-            },
-          ],
-          ministries: [
-            { name: "Children's Ministry", description: "Engaging programs for kids of all ages." },
-            { name: "Youth Group", description: "Building faith and community for teenagers." },
-            { name: "Worship Team", description: "Leading our congregation in praise." },
-            { name: "Outreach & Missions", description: "Serving locally and globally." },
-          ],
-          contact: {
-            address: "123 Faith Avenue\nIndianapolis, IN 46201",
-            serviceTimes: "Sundays at 9:00 AM & 11:00 AM",
-            email: "info@impactpointchurch.org",
-            phone: "+1 (317) 555-PRAY",
-            officeHours: "Monday - Friday: 9:00 AM - 5:00 PM\nSaturday: 10:00 AM - 2:00 PM",
-          },
-        };
-        
+// This is a single object that holds all initial editable church data
+export const initialChurchData = {
+  heroSlides: [
+    {
+      id: "slide1",
+      imageUrl: "https://placehold.co/1920x1080/667eea/FFFFFF?text=Welcome+to+Impact+Point+Church",
+      title: "Welcome to Impact Point Church",
+      subtitle: "Where Faith Meets Purpose - Making a Lasting Impact in Our Community",
+      ctaPrimaryText: "Join Us This Sunday",
+      ctaPrimaryLink: "#services",
+      ctaSecondaryText: "Learn More",
+      ctaSecondaryLink: "#about",
+    },
+    {
+      id: "slide2",
+      imageUrl: "https://placehold.co/1920x1080/764ba2/FFFFFF?text=Growing+in+Faith",
+      title: "Growing in Faith Together",
+      subtitle: "Discover Your Purpose and Connect with Our Community",
+      ctaPrimaryText: "Explore Ministries",
+      ctaPrimaryLink: "#ministries",
+      ctaSecondaryText: "Watch Sermons",
+      ctaSecondaryLink: "#sermons",
+    },
+    {
+      id: "slide3",
+      imageUrl: "https://placehold.co/1920x1080/3498db/FFFFFF?text=Serving+Our+Community",
+      title: "Serving Our Community",
+      subtitle: "Putting Love into Action, One Project at a Time",
+      ctaPrimaryText: "See Events",
+      ctaPrimaryLink: "#events",
+      ctaSecondaryText: "Get Involved",
+      ctaSecondaryLink: "#contact",
+    },
+  ],
+  about: {
+    title: "Our Mission", // Changed title as per HTML
+    text: "At Impact Point Church, we believe that every person has the potential to make a meaningful impact in their community and beyond. We are a vibrant, welcoming community dedicated to growing in faith, serving others, and creating positive change in our world.\n\nFounded on the principles of love, compassion, and service, we strive to be a place where everyone can find their purpose and make a difference. Whether you're taking your first steps in faith or have been walking with God for years, you'll find a home here.",
+    imageUrl: "https://placehold.co/800x400/c3cfe2/555?text=About+Us+Image", // New image for about section
+  },
+  services: [ // New section based on HTML "Service Times"
+    {
+      id: "service1",
+      icon: "🌅", // Using emoji as in HTML, can be replaced with Lucide icon
+      title: "Sunday Morning",
+      time: "9:00 AM & 11:00 AM",
+      description: "Join us for inspiring worship, biblical teaching, and community fellowship. Childcare and youth programs available.",
+    },
+    {
+      id: "service2",
+      icon: "🌙",
+      title: "Wednesday Evening",
+      time: "7:00 PM",
+      description: "Midweek service featuring prayer, Bible study, and deeper community connection in a more intimate setting.",
+    },
+    {
+      id: "service3",
+      icon: "🎵",
+      title: "Online Services",
+      time: "Live Stream Available",
+      description: "Can't make it in person? Join our live stream service and be part of our community from anywhere.",
+    },
+  ],
+  sermons: [ // Existing sermons section (video/audio)
+    {
+      id: "sermon1",
+      title: "The Power of Forgiveness",
+      speaker: "Pastor John Doe",
+      date: "2024-06-30",
+      description: "A message on the liberating power of forgiveness in our daily lives.",
+      videoLink: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Example YouTube embed link
+      audioLink: "#",
+    },
+    {
+      id: "sermon2",
+      title: "Living a Life of Purpose",
+      speaker: "Guest Speaker Jane Smith",
+      date: "2024-06-23",
+      description: "Exploring what it means to live intentionally and fulfill God's calling.",
+      videoLink: "#",
+      audioLink: "#",
+    },
+  ],
+  events: [
+    {
+      id: "event1",
+      title: "Community BBQ & Baptism Service",
+      date: "Sunday, July 6th", // Updated date format as per HTML
+      time: "10:00 AM - 2:00 PM", // Added time for consistency, though HTML didn't show it for all
+      location: "Church Grounds", // Simplified location
+      description: "Join us for a special outdoor service followed by a community barbecue. We'll also be celebrating baptisms!",
+    },
+    {
+      id: "event2",
+      title: "Vacation Bible School",
+      date: "July 15-19",
+      time: "All Week",
+      location: "Church Campus",
+      description: "An exciting week of learning, games, and fun for children ages 4-12. Registration now open!",
+    },
+    {
+      id: "event3", // Added from HTML
+      title: "Community Service Day",
+      date: "Saturday, July 26th",
+      time: "9:00 AM - 3:00 PM",
+      location: "Various City Locations",
+      description: "Join us as we serve our community through various volunteer projects around the city.",
+    },
+    {
+      id: "event4", // Added from HTML
+      title: "Youth Summer Retreat",
+      date: "August 2-4",
+      time: "All Weekend",
+      location: "Camp Grounds",
+      description: "A weekend getaway for our youth to grow in faith, build friendships, and have amazing adventures.",
+    },
+  ],
+  ministries: [
+    { name: "Children's Ministry", description: "Engaging programs for kids from nursery through 5th grade, helping them discover God's love through fun activities and age-appropriate teaching." },
+    { name: "Youth Ministry", description: "Dynamic programs for teens including weekly gatherings, mission trips, and leadership development opportunities." },
+    { name: "Community Outreach", description: "Making a real impact through food banks, community service projects, and partnerships with local organizations." },
+    { name: "Small Groups", description: "Build deeper relationships and grow in faith through our various small group Bible studies and fellowship groups." },
+    { name: "Worship Ministry", description: "Join our worship team and use your musical gifts to lead others in praise and worship every Sunday." },
+    { name: "Seniors Ministry", description: "Fellowship, Bible study, and special activities designed for our senior community members." },
+  ],
+  contact: {
+    address: "123 Faith Avenue\nIndianapolis, IN 46201",
+    serviceTimes: "Sundays at 9:00 AM & 11:00 AM", // Kept this for consistency, though HTML moved it to Services
+    email: "info@impactpointchurch.org",
+    phone: "+1 (317) 555-PRAY",
+    officeHours: "Monday - Friday: 9:00 AM - 5:00 PM\nSaturday: 10:00 AM - 2:00 PM",
+  },
+};

@@ -36,6 +36,7 @@ const SermonsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem; /* gap-8 */
+  justify-content: center; 
 
   @media (min-width: 768px) {
     grid-template-columns: repeat(2, 1fr); /* md:grid-cols-2 */

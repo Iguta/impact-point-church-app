@@ -4,7 +4,8 @@ import { initialChurchData } from './data/initialChurchData';
 import { Button, Icon } from './components/UtilityComponents';
 import HeroSection from './components/HeroSection';
 import AboutSection from './components/AboutSection';
-import SermonsSection from './components/SermonsSection';
+import SermonsSection from './components/SermonsSection'; // Existing sermons section
+import ServicesSection from './components/ServicesSection'; // New services section
 import EventsSection from './components/EventsSection';
 import MinistriesSection from './components/MinistriesSection';
 import ContactSection from './components/ContactSection';
@@ -13,121 +14,112 @@ import styled, { createGlobalStyle } from 'styled-components';
 
 // Global styles for body and animations
 const GlobalStyle = createGlobalStyle`
-  body {
-    font-family: 'Inter', sans-serif;
+  * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background-color: #F3F4F6; /* Light gray for body */
-    color: #1F2937; /* Dark gray for text */
   }
 
-  /* Dark mode styles */
-  body.dark {
-    background-color: #111827; /* Darker gray for body */
-    color: #F9FAFB; /* Light text for dark mode */
+  body {
+    font-family: 'Arial', sans-serif; /* As per HTML */
+    line-height: 1.6;
+    color: #333; /* Default text color */
+    overflow-x: hidden;
   }
 
-  /* Custom animations */
-  @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  /* Custom animations from HTML */
+  @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
   }
 
-  .animate-fade-in-down {
-    animation: fadeInDown 1s ease-out forwards;
+  @keyframes slideInUp {
+      from {
+          opacity: 0;
+          transform: translateY(30px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
   }
-  .animate-fade-in-up {
-    animation: fadeInUp 1s ease-out forwards;
-    animation-delay: 0.3s;
+
+  /* Fade in animation for sections */
+  .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease;
   }
-  .animate-fade-in {
-    animation: fadeIn 1s ease-out forwards;
-    animation-delay: 0.6s;
+
+  .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+  }
+
+  html {
+      scroll-behavior: smooth; /* Smooth scrolling */
   }
 `;
 
 // Styled components for App layout
 const AppContainer = styled.div`
-  font-family: 'Inter', sans-serif;
-  color: #1F2937; /* Default text color */
-  background-color: #F3F4F6; /* Default background color */
+  font-family: 'Arial', sans-serif;
+  color: #333;
   min-height: 100vh;
-
-  &.dark {
-    color: #F9FAFB; /* Dark mode text color */
-    background-color: #111827; /* Dark mode background color */
-  }
 `;
 
 const Header = styled.header`
-  background-color: #4F46E5; /* Indigo-700 */
+  background: linear-gradient(135deg, #2c3e50, #3498db);
   color: white;
   padding: 1rem 0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  backdrop-filter: blur(10px);
+  transition: background 0.3s ease; /* For scroll effect */
 
-  .dark & {
-    background-color: #3730A3; /* Indigo-900 */
-  }
-`;
-
-const HeaderContent = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-  }
-`;
-
-const SiteTitle = styled.h1`
-  font-size: 1.875rem; /* text-3xl */
-  font-weight: 800; /* font-extrabold */
-  margin-bottom: 0.5rem;
-
-  @media (min-width: 768px) {
-    margin-bottom: 0;
+  &.scrolled {
+    background: linear-gradient(135deg, rgba(44, 62, 80, 0.95), rgba(52, 152, 219, 0.95));
   }
 `;
 
 const Nav = styled.nav`
-  ul {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem; /* space-x-4 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+`;
 
-    @media (min-width: 768px) {
-      gap: 1.5rem; /* md:space-x-6 */
+const Logo = styled.div`
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+`;
+
+const NavLinks = styled.ul`
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+
+  a {
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+
+    &:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
     }
+  }
 
-    li {
-      a {
-        color: inherit;
-        text-decoration: none;
-        font-size: 1.125rem; /* text-lg */
-        display: flex;
-        align-items: center;
-        transition: color 0.2s ease-in-out;
-
-        &:hover {
-          color: #E0E7FF; /* Indigo-200 */
-        }
-      }
-    }
+  @media (max-width: 768px) {
+    display: none; /* Hide navigation links on small screens */
   }
 `;
 
@@ -139,34 +131,52 @@ const AdminToggleContainer = styled.div`
 `;
 
 const Footer = styled.footer`
-  background-color: #1F2937; /* Gray-800 */
-  color: #D1D5DB; /* Gray-300 */
-  padding: 1.5rem 0;
+  background: #2c3e50;
+  color: white;
   text-align: center;
-  font-size: 0.875rem; /* text-sm */
-
-  .dark & {
-    background-color: #1F2937; /* Gray-900 */
-  }
-
-  p {
-    margin-top: 0.5rem;
-  }
-
-  span {
-    font-family: monospace;
-  }
+  padding: 3rem 2rem 2rem;
 `;
 
+const FooterContent = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+`;
+
+const SocialLinks = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+`;
+
+const SocialLink = styled.a`
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, #3498db, #9b59b6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 1.5rem; /* For emojis/icons */
+
+  &:hover {
+    transform: translateY(-5px) rotate(10deg);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  }
+`;
 
 const App = () => {
   const { db, userId, loadingFirebase } = useFirebase();
   const [churchData, setChurchData] = useState(initialChurchData);
   const [isEditing, setIsEditing] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
 
   // Firestore document path: artifacts/{appId}/users/{userId}/church_website/main_church_data
-  // Use a fallback for __app_id when running locally outside Canvas
   const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'local-dev-app-id';
   const churchDocRef = userId && db ? doc(db, 'artifacts', appId, 'users', userId, 'church_website', 'main_church_data') : null;
 
@@ -178,7 +188,6 @@ const App = () => {
       if (docSnap.exists()) {
         setChurchData(docSnap.data());
       } else {
-        // If document doesn't exist, create it with initial data
         console.log("No church data found, creating initial data.");
         setDoc(churchDocRef, initialChurchData)
           .then(() => setChurchData(initialChurchData))
@@ -190,9 +199,21 @@ const App = () => {
       setDataLoading(false);
     });
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [churchDocRef, loadingFirebase]); // Re-run when doc ref or firebase loading state changes
+  }, [churchDocRef, loadingFirebase]);
+
+  // Handle header background on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setHeaderScrolled(true);
+      } else {
+        setHeaderScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Function to update specific sections in Firestore
   const handleUpdateSection = async (sectionKey, newData) => {
@@ -213,70 +234,68 @@ const App = () => {
     return (
       <AppContainer>
         <GlobalStyle />
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 dark:border-indigo-400"></div>
-          <p className="ml-4 text-xl">Loading website...</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#F3F4F6', color: '#1F2937' }}>
+          <div style={{ animation: 'spin 1s linear infinite', borderRadius: '50%', height: '4rem', width: '4rem', borderTop: '4px solid #4F46E5', borderBottom: '4px solid #4F46E5' }}></div>
+          <p style={{ marginLeft: '1rem', fontSize: '1.25rem' }}>Loading website...</p>
         </div>
       </AppContainer>
     );
   }
 
   return (
-    <AppContainer className="font-sans">
+    <AppContainer>
       <GlobalStyle /> {/* Apply global styles */}
       {/* Header and Navigation */}
-      <Header>
-        <HeaderContent>
-          <SiteTitle>Impact Point Church</SiteTitle>
-          <Nav>
-            <ul>
-              <li><a href="#about"><Icon name="church" className="mr-1"/> About</a></li>
-              <li><a href="#sermons"><Icon name="mic" className="mr-1"/> Sermons</a></li>
-              <li><a href="#events"><Icon name="calendar" className="mr-1"/> Events</a></li>
-              <li><a href="#ministries"><Icon name="users" className="mr-1"/> Ministries</a></li>
-              <li><a href="#contact"><Icon name="mappin" className="mr-1"/> Contact</a></li>
-            </ul>
-          </Nav>
-        </HeaderContent>
+      <Header className={headerScrolled ? 'scrolled' : ''}>
+        <Nav>
+          <Logo>Impact Point Church</Logo>
+          <NavLinks>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#ministries">Ministries</a></li>
+            <li><a href="#events">Events</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </NavLinks>
+        </Nav>
       </Header>
 
       {/* Admin Toggle */}
       <AdminToggleContainer>
         <Button
           onClick={() => setIsEditing(!isEditing)}
-          className={`px-6 py-3 rounded-full text-lg font-semibold shadow-lg ${
-            isEditing ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'
-          }`}
+          className={isEditing ? 'btn-primary-red' : 'btn-primary-green'}
         >
           {isEditing ? 'Exit Edit Mode' : 'Enter Edit Mode'}
         </Button>
       </AdminToggleContainer>
 
       {/* Website Sections */}
-      <HeroSection />
+      <HeroSection data={churchData.heroSlides} isEditing={isEditing} onUpdate={handleUpdateSection} />
       <AboutSection data={churchData.about} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <SermonsSection data={churchData.sermons} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <EventsSection data={churchData.events} isEditing={isEditing} onUpdate={handleUpdateSection} />
+      <ServicesSection data={churchData.services} isEditing={isEditing} onUpdate={handleUpdateSection} />
+      <SermonsSection data={churchData.sermons} isEditing={isEditing} onUpdate={handleUpdateSection} /> {/* Keep sermons separate */}
       <MinistriesSection data={churchData.ministries} isEditing={isEditing} onUpdate={handleUpdateSection} />
+      <EventsSection data={churchData.events} isEditing={isEditing} onUpdate={handleUpdateSection} />
       <ContactSection data={churchData.contact} isEditing={isEditing} onUpdate={handleUpdateSection} />
 
       {/* Footer */}
       <Footer>
-        <div className="container mx-auto px-4">
+        <FooterContent>
+          <SocialLinks>
+            {/* Using emojis for social links as in HTML, or you can replace with Lucide icons */}
+            <SocialLink href="#" target="_blank" rel="noopener noreferrer">📘</SocialLink>
+            <SocialLink href="#" target="_blank" rel="noopener noreferrer">📷</SocialLink>
+            <SocialLink href="#" target="_blank" rel="noopener noreferrer">🐦</SocialLink>
+            <SocialLink href="#" target="_blank" rel="noopener noreferrer">📺</SocialLink>
+          </SocialLinks>
           <p>&copy; {new Date().getFullYear()} Impact Point Church. All rights reserved.</p>
-          <p className="mt-2">Built with React and powered by Firebase Firestore.</p>
-          <p className="mt-1">Your User ID: <span className="font-mono">{userId || 'Loading...'}</span></p>
-        </div>
+          <p>Making an Impact, One Life at a Time</p>
+        </FooterContent>
       </Footer>
     </AppContainer>
   );
 };
 
-// Wrapper to provide Firebase context to the App component
-const ChurchWebsite = () => (
-  <FirebaseProvider>
-    <App />
-  </FirebaseProvider>
-);
+export default App;
 
-export default ChurchWebsite;
