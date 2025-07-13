@@ -91,38 +91,51 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
       <SectionTitle>Get in Touch</SectionTitle>
       <ContactGrid>
         {/* Contact Info Section */}
-        <ContactInfoCard> {/* Apply fade-in class */}
+        <ContactInfoCard>
           <CardTitle>Visit Us</CardTitle>
           {isEditing ? (
             <FormSpace>
-              <TextArea
-                value={tempContact.address}
-                onChange={(e) => setTempContact({ ...tempContact, address: e.target.value })}
-                placeholder="Address"
-                rows="3"
-              />
-              <Input
-                type="tel"
-                value={tempContact.phone}
-                onChange={(e) => setTempContact({ ...tempContact, phone: e.target.value })}
-                placeholder="Phone"
-              />
-              <Input
-                type="email"
-                value={tempContact.email}
-                onChange={(e) => setTempContact({ ...tempContact, email: e.target.value })}
-                placeholder="Email"
-              />
-              <TextArea
-                value={tempContact.officeHours}
-                onChange={(e) => setTempContact({ ...tempContact, officeHours: e.target.value })}
-                placeholder="Office Hours"
-                rows="3"
-              />
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <MapPin size={24} style={{ marginRight: '0.5rem', color: '#E0E7FF' }} /> {/* indigo-200 */}
+                <TextArea
+                  value={tempContact.address}
+                  onChange={(e) => setTempContact({ ...tempContact, address: e.target.value })}
+                  placeholder="Address"
+                  rows="3"
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <Phone size={24} style={{ marginRight: '0.5rem', color: '#E0E7FF' }} /> {/* indigo-200 */}
+                <Input
+                  type="tel"
+                  value={tempContact.phone}
+                  onChange={(e) => setTempContact({ ...tempContact, phone: e.target.value })}
+                  placeholder="Phone"
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <Mail size={24} style={{ marginRight: '0.5rem', color: '#E0E7FF' }} /> {/* indigo-200 */}
+                <Input
+                  type="email"
+                  value={tempContact.email}
+                  onChange={(e) => setTempContact({ ...tempContact, email: e.target.value })}
+                  placeholder="Email"
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <Calendar size={24} style={{ marginRight: '0.5rem', color: '#E0E7FF' }} /> {/* indigo-200 */}
+                <TextArea
+                  value={tempContact.officeHours}
+                  onChange={(e) => setTempContact({ ...tempContact, officeHours: e.target.value })}
+                  placeholder="Office Hours"
+                  rows="3"
+                />
+              </div>
               <Button onClick={handleSaveContact} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Contact Info</Button>
             </FormSpace>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 text-white text-lg">
+              <h3 className="text-2xl font-semibold mb-4">Visit Us</h3>
               <InfoText><strong>Address:</strong><br />{data.address.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}</InfoText>
               <InfoText><strong>Phone:</strong><br />{data.phone}</InfoText>
               <InfoText><strong>Email:</strong><br />{data.email}</InfoText>
@@ -132,7 +145,7 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
         </ContactInfoCard>
 
         {/* Send Us a Message Section (Form) */}
-        <ContactFormCard> {/* Apply fade-in class */}
+        <ContactFormCard>
           <CardTitle>Send Us a Message</CardTitle>
           <Form onSubmit={handleFormSubmit}>
             <div className="form-group">

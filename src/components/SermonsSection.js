@@ -8,6 +8,7 @@ const SectionContainer = styled.section`
 
   .dark & {
     background-color: #1F2937; /* gray-900 */
+    justify-content:center;
   }
 `;
 
@@ -34,9 +35,8 @@ const SectionTitle = styled.h2`
 
 const SermonsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem; /* gap-8 */
-  justify-content: center; 
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  gap: 2rem;
 
   @media (min-width: 768px) {
     grid-template-columns: repeat(2, 1fr); /* md:grid-cols-2 */
@@ -215,9 +215,7 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
   return (
     <SectionContainer id="sermons">
       <ContentWrapper>
-        <SectionTitle>
-          <Icon name="mic" className="mr-3" /> Latest Sermons
-        </SectionTitle>
+        <SectionTitle>Latest Sermons</SectionTitle>
         <SermonsGrid>
           {sortedSermons.map((sermon) => (
             <SermonCard key={sermon.id}>

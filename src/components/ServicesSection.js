@@ -98,7 +98,7 @@ const ServicesSection = ({ data, isEditing, onUpdate }) => {
 
   return (
     <SectionContainer id="services">
-      <SectionTitle className="fade-in">Service Times</SectionTitle>
+      <SectionTitle>Service Times</SectionTitle>
       <ServicesGrid>
         {tempServices.map((service) => (
           <ServiceCard key={service.id}> {/* Apply fade-in class */}

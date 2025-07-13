@@ -5,6 +5,7 @@ import { Button, Icon, Input, TextArea, FormSpace, SectionContainer, SectionTitl
 const EventsSectionContainer = styled(SectionContainer)`
   background: #f8f9fa; /* from HTML */
   margin: 0 -2rem; /* Extend full width */
+  max-width:none;
 `;
 
 const EventsList = styled.div`

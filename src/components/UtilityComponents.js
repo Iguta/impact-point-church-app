@@ -1,6 +1,32 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Church, Calendar, Mic, Users, MapPin, Mail, Phone, PlusCircle, Trash2, Edit, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Church, Calendar, Mic, Users, MapPin, Mail, Phone, PlusCircle, Trash2, Edit, ExternalLink, ChevronLeft, ChevronRight, PlayCircle, Wifi} from 'lucide-react';
+
+// --- Custom Social Media SVG Icons (as React Components) ---
+// These are simple SVG paths for common social media logos
+const FacebookIconSVG = ({ size = 24, className = '' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2.04C6.5 2.04 2 6.54 2 12.04c0 5.04 3.66 9.24 8.44 9.96v-7.04H7.16v-2.92h3.28V9.04c0-3.24 1.98-5.04 4.88-5.04 1.4 0 2.6.12 2.96.16v3.2h-1.92c-1.52 0-1.84.76-1.84 1.8v2.32h3.6l-.52 3.2h-3.08v7.04c4.78-.72 8.44-4.92 8.44-9.96 0-5.5-4.5-10-10-10z"/>
+  </svg>
+);
+
+const InstagramIconSVG = ({ size = 24, className = '' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07c1.265.057 1.954.236 2.599.481.65.254 1.154.545 1.607.999.453.453.744.957.999 1.607.245.645.424 1.334.481 2.599.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.057 1.265-.236 1.954-.481 2.599-.254.65-.545 1.154-.999 1.607-.453.453-.957.744-1.607.999-.645.245-1.334.424-2.599.481-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.265-.057-1.954-.236-2.599-.481-.65-.254-1.154-.545-1.607-.999-.453-.453-.744-.957-.999-1.607-.245-.645-.424-1.334-.481-2.599-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.057-1.265.236-1.954.481-2.599.254-.65.545-1.154.999-1.607.453-.453.957-.744 1.607-.999.645-.245 1.334-.424 2.599-.481 1.266-.058 1.646-.07 4.85-.07zm0 2.163c-3.204 0-3.584.012-4.85.07c-1.173.053-1.685.22-2.02.355-.335.135-.589.308-.85.569-.261.261-.434.515-.569.85-.135.335-.302.847-.355 2.02-.058 1.266-.07 1.646-.07 4.85s.012 3.584.07 4.85c.053 1.173.22 1.685.355 2.02.135.335.308.589.569.85.261.261.515.434.85.569.335.135.847.302 2.02.355 1.266.058 1.646.07 4.85.07s3.584-.012 4.85-.07c1.173-.053 1.685-.22 2.02-.355.335-.135.589-.308.85-.569.261-.261.434-.515.569-.85.135-.335.302-.847.355-2.02.058-1.266.07-1.646.07-4.85s-.012-3.584-.07-4.85c-.053-1.173-.22-1.685-.355-2.02-.135-.335-.308-.589-.569-.85-.261-.261-.515-.434-.85-.569-.335-.135-.847-.302-2.02-.355-1.266-.058-1.646-.07-4.85-.07zm0 3.65c-2.453 0-4.437 1.984-4.437 4.437s1.984 4.437 4.437 4.437 4.437-1.984 4.437-4.437-1.984-4.437-4.437-4.437zm0 2.163c1.266 0 2.274 1.008 2.274 2.274s-1.008 2.274-2.274 2.274-2.274-1.008-2.274-2.274 1.008-2.274 2.274-2.274zm6.406-7.143c-.58 0-1.05.47-1.05 1.05s.47 1.05 1.05 1.05 1.05-.47 1.05-1.05-.47-1.05-1.05-1.05z"/>
+  </svg>
+);
+
+const TwitterIconSVG = ({ size = 24, className = '' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.37-.83.49-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.25 5.4 7.72 3.53 5.03c-.36.62-.56 1.35-.56 2.13 0 1.49.75 2.81 1.91 3.59-.7-.02-1.36-.22-1.93-.53v.03c0 2.08 1.48 3.82 3.44 4.22-.36.1-.74.15-1.13.15-.28 0-.55-.03-.81-.08 1.48 1.81 3.64 3.13 6.1 3.17-1.48 1.16-3.34 1.86-5.37 1.86-.35 0-.7-.02-1.04-.06C3.96 20.3 6.39 21 9 21c7.2 0 11.15-5.96 11.15-11.15 0-.17-.01-.34-.01-.51.77-.55 1.44-1.23 1.97-2.01z"/>
+  </svg>
+);
+
+const YouTubeIconSVG = ({ size = 24, className = '' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M21.54 6.54a3.17 3.17 0 0 0-2.24-2.24C17.77 4 12 4 12 4s-5.77 0-7.3 0C3.43 4.32 2.72 5.03 2.4 6.54A3.17 3.17 0 0 0 2 9.28v5.44a3.17 3.17 0 0 0 .4 2.74c.32 1.51 1.03 2.22 2.54 2.54 1.53.32 7.3.32 7.3.32s5.77 0 7.3-.32c1.51-.32 2.22-1.03 2.54-2.54a3.17 3.17 0 0 0 .4-2.74v-5.44a3.17 3.17 0 0 0-.4-2.74zM9.98 15.15V8.85l5.04 3.15z"/>
+  </svg>
+);
 
 // Styled Button component
 const StyledButton = styled.button`
@@ -92,22 +118,29 @@ export const Button = ({ children, onClick, className = '', ...props }) => (
   </StyledButton>
 );
 
-// Icon mapping for Lucide-React
-export const Icon = ({ name, className = '' }) => {
+// Icon mapping for Lucide-React and custom SVGs
+export const Icon = ({ name, className = '', size = 24 }) => {
   const icons = {
-    church: <Church className={className} />,
-    calendar: <Calendar className={className} />,
-    mic: <Mic className={className} />,
-    users: <Users className={className} />,
-    mappin: <MapPin className={className} />,
-    mail: <Mail className={className} />,
-    phone: <Phone className={className} />,
-    plusCircle: <PlusCircle className={className} />,
-    trash2: <Trash2 className={className} />,
-    edit: <Edit className={className} />,
-    externalLink: <ExternalLink className={className} />,
-    chevronLeft: <ChevronLeft className={className} />,
-    chevronRight: <ChevronRight className={className} />,
+    church: <Church className={className} size={size} />,
+    calendar: <Calendar className={className} size={size} />,
+    mic: <Mic className={className} size={size} />,
+    users: <Users className={className} size={size} />,
+    mappin: <MapPin className={className} size={size} />,
+    mail: <Mail className={className} size={size} />,
+    phone: <Phone className={className} size={size} />,
+    plusCircle: <PlusCircle className={className} size={size} />,
+    trash2: <Trash2 className={className} size={size} />,
+    edit: <Edit className={className} size={size} />,
+    externalLink: <ExternalLink className={className} size={size} />,
+    chevronLeft: <ChevronLeft className={className} size={size} />,
+    chevronRight: <ChevronRight className={className} size={size} />,
+    playCircle: <PlayCircle className={className} size={size} />, // Added for LiveStreamSection
+    wifi: <Wifi className={className} size={size} />, // Added for LiveStreamSection
+    // Custom Social Media SVG Icons
+    facebook: <FacebookIconSVG className={className} size={size} />,
+    instagram: <InstagramIconSVG className={className} size={size} />,
+    twitter: <TwitterIconSVG className={className} size={size} />,
+    youtube: <YouTubeIconSVG className={className} size={size} />,
   };
   return icons[name] || null;
 };
@@ -188,3 +221,7 @@ export const SectionTitle = styled.h2`
     border-radius: 2px;
   }
 `;
+
+
+
+

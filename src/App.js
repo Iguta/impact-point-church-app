@@ -9,6 +9,7 @@ import ServicesSection from './components/ServicesSection'; // New services sect
 import EventsSection from './components/EventsSection';
 import MinistriesSection from './components/MinistriesSection';
 import ContactSection from './components/ContactSection';
+import LiveStreamSection from './components/LiveStreamSection'; // Import new LiveStreamSection
 import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import styled, { createGlobalStyle } from 'styled-components';
 
@@ -252,7 +253,9 @@ const App = () => {
           <NavLinks>
             <li><a href="#home">Home</a></li>
             <li><a href="#about">About</a></li>
+            {/* <li><a href="#livestream">Live Stream</a></li> */}
             <li><a href="#services">Services</a></li>
+            <li><a href="#sermons">Sermons</a></li>
             <li><a href="#ministries">Ministries</a></li>
             <li><a href="#events">Events</a></li>
             <li><a href="#contact">Contact</a></li>
@@ -273,8 +276,9 @@ const App = () => {
       {/* Website Sections */}
       <HeroSection data={churchData.heroSlides} isEditing={isEditing} onUpdate={handleUpdateSection} />
       <AboutSection data={churchData.about} isEditing={isEditing} onUpdate={handleUpdateSection} />
+      <LiveStreamSection data={churchData.liveStream} isEditing={isEditing} onUpdate={handleUpdateSection} />
       <ServicesSection data={churchData.services} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <SermonsSection data={churchData.sermons} isEditing={isEditing} onUpdate={handleUpdateSection} /> {/* Keep sermons separate */}
+      <SermonsSection data={churchData.sermons} isEditing={isEditing} onUpdate={handleUpdateSection} />
       <MinistriesSection data={churchData.ministries} isEditing={isEditing} onUpdate={handleUpdateSection} />
       <EventsSection data={churchData.events} isEditing={isEditing} onUpdate={handleUpdateSection} />
       <ContactSection data={churchData.contact} isEditing={isEditing} onUpdate={handleUpdateSection} />
@@ -283,11 +287,19 @@ const App = () => {
       <Footer>
         <FooterContent>
           <SocialLinks>
-            {/* Using emojis for social links as in HTML, or you can replace with Lucide icons */}
-            <SocialLink href="#" target="_blank" rel="noopener noreferrer">📘</SocialLink>
-            <SocialLink href="#" target="_blank" rel="noopener noreferrer">📷</SocialLink>
-            <SocialLink href="#" target="_blank" rel="noopener noreferrer">🐦</SocialLink>
-            <SocialLink href="#" target="_blank" rel="noopener noreferrer">📺</SocialLink>
+            {/* Replaced emojis with Lucide-React icons or custom SVGs */}
+            <SocialLink href="https://facebook.com/yourchurch" target="_blank" rel="noopener noreferrer">
+              <Icon name="facebook" size={24} />
+            </SocialLink>
+            <SocialLink href="https://instagram.com/yourchurch" target="_blank" rel="noopener noreferrer">
+              <Icon name="instagram" size={24} />
+            </SocialLink>
+            <SocialLink href="https://twitter.com/yourchurch" target="_blank" rel="noopener noreferrer">
+              <Icon name="twitter" size={24} />
+            </SocialLink>
+            <SocialLink href="https://youtube.com/yourchurch" target="_blank" rel="noopener noreferrer">
+              <Icon name="youtube" size={24} />
+            </SocialLink>
           </SocialLinks>
           <p>&copy; {new Date().getFullYear()} Impact Point Church. All rights reserved.</p>
           <p>Making an Impact, One Life at a Time</p>
@@ -298,4 +310,3 @@ const App = () => {
 };
 
 export default App;
-
