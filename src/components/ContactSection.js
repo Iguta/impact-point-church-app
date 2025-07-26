@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Icon, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
 import { MapPin, Calendar, Mail, Phone } from 'lucide-react';
+import isEqual from 'lodash.isequal'
 
 // Reusing SectionContainer and SectionTitle from UtilityComponents
 const ContactGrid = styled.div`
@@ -67,7 +68,10 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
   });
 
   useEffect(() => {
-    setTempContact(data);
+    if(!isEditing && !isEqual(data, tempContact)){
+        setTempContact(data);
+        console.log(tempContact)
+    }
   }, [data]);
 
   const handleSaveContact = () => {
