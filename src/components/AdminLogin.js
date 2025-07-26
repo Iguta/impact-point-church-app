@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import {signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { Button, Input, FormSpace } from './UtilityComponents';
 // Import specific icons from react-icons
 import { FaSignInAlt, FaSignOutAlt, FaEnvelope, FaLock, FaGoogle } from 'react-icons/fa';

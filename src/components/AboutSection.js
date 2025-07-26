@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Button, Icon, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
+import { Button, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
 import { isEqual } from 'lodash';
 
 // Reusing SectionContainer and SectionTitle from UtilityComponents
@@ -43,7 +43,7 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
   useEffect(() => {
     if(!isEditing && isEqual(data, tempData))
     setTempData(data);
-  }, [data]);
+  }, [data, tempData, isEditing]);
 
   const handleSave = () => {
     onUpdate('about', tempData);
