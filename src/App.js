@@ -9,7 +9,8 @@ import ServicesSection from './components/ServicesSection'; // New services sect
 import EventsSection from './components/EventsSection';
 import MinistriesSection from './components/MinistriesSection';
 import ContactSection from './components/ContactSection';
-import LiveStreamSection from './components/LiveStreamSection'; // Import new LiveStreamSection
+import LiveStreamSection from './components/LiveStreamSection'; // Import LiveStreamSection
+import AdminLogin from './components/AdminLogin'; // Import AdminLogin component
 import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import styled, { createGlobalStyle } from 'styled-components';
 
@@ -171,11 +172,22 @@ const SocialLink = styled.a`
 `;
 
 const App = () => {
-  const { db, userId, loadingFirebase } = useFirebase();
+  const { db, userId, loadingFirebase, auth, firebaseInitError } = useFirebase(); // Added 'auth' from context
   const [churchData, setChurchData] = useState(initialChurchData);
   const [isEditing, setIsEditing] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  // Define allowed admin UIDs for the church website
+  // IMPORTANT: Replace 'YOUR_ADMIN_UID_1' with the actual persistent UID from your Firebase Authentication
+  // (e.g., from an Email/Password or Google login user).
+  const allowedAdminUids = [
+    "H8cw5YK3nQcbuiB5g7cDF0viwMr1", // <--- REPLACE THIS WITH YOUR ACTUAL PERSISTENT UID
+    // "another_church_admin_uid", // Add more UIDs if needed
+  ];
+
+  // Check if the current user is an admin
+  const isAdmin = userId && allowedAdminUids.includes(userId);
 
   // Firestore document path: artifacts/{appId}/users/{userId}/church_website/main_church_data
   const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'local-dev-app-id';
@@ -189,10 +201,17 @@ const App = () => {
       if (docSnap.exists()) {
         setChurchData(docSnap.data());
       } else {
-        console.log("No church data found, creating initial data.");
-        setDoc(churchDocRef, initialChurchData)
-          .then(() => setChurchData(initialChurchData))
-          .catch((error) => console.error("Error setting initial data:", error));
+        console.log("No church data found, attempting to create initial data.");
+        // Only attempt to set initial data if the current user is an admin
+        if (isAdmin) {
+          setDoc(churchDocRef, initialChurchData)
+            .then(() => setChurchData(initialChurchData))
+            .catch((error) => console.error("Error setting initial data:", error));
+        } else {
+          console.log("Not an admin, initial data not created. Displaying default initial data.");
+          // For non-admins, if no data exists, they will just see the hardcoded initial data
+          setChurchData(initialChurchData);
+        }
       }
       setDataLoading(false);
     }, (error) => {
@@ -201,7 +220,7 @@ const App = () => {
     });
 
     return () => unsubscribe();
-  }, [churchDocRef, loadingFirebase]);
+  }, [churchDocRef, loadingFirebase, isAdmin]); // Added isAdmin to dependency array
 
   // Handle header background on scroll
   useEffect(() => {
@@ -222,15 +241,28 @@ const App = () => {
       console.error("Firestore document reference is not available.");
       return;
     }
+    // Only allow updates if the current user is an admin
+    if (!isAdmin) {
+      console.warn("Attempted to update data without admin privileges.");
+      alert("You do not have permission to edit this content.");
+      return;
+    }
     try {
       await updateDoc(churchDocRef, { [sectionKey]: newData });
       console.log(`${sectionKey} section updated successfully!`);
     } catch (error) {
       console.error(`Error updating ${sectionKey} section:`, error);
+      alert(`Error saving changes: ${error.message}. Check console for details.`);
     }
   };
 
   // --- Render Logic ---
+  // If there's a critical Firebase initialization error, display it from FirebaseProvider
+  if (firebaseInitError) {
+    return <FirebaseProvider><div style={{textAlign:'center',padding:'50px'}}>Firebase init error handled by provider</div></FirebaseProvider>;
+  }
+
+  // If Firebase is still loading or data is loading, show spinner
   if (loadingFirebase || dataLoading) {
     return (
       <AppContainer>
@@ -239,6 +271,16 @@ const App = () => {
           <div style={{ animation: 'spin 1s linear infinite', borderRadius: '50%', height: '4rem', width: '4rem', borderTop: '4px solid #4F46E5', borderBottom: '4px solid #4F46E5' }}></div>
           <p style={{ marginLeft: '1rem', fontSize: '1.25rem' }}>Loading website...</p>
         </div>
+      </AppContainer>
+    );
+  }
+
+  // If not an admin AND currently in editing mode (meaning they tried to enter it), show login
+  if (!isAdmin && isEditing) {
+    return (
+      <AppContainer>
+        <GlobalStyle />
+        <AdminLogin auth={auth} onLoginSuccess={() => setIsEditing(true)} /> {/* Pass auth and a success callback */}
       </AppContainer>
     );
   }
@@ -263,15 +305,17 @@ const App = () => {
         </Nav>
       </Header>
 
-      {/* Admin Toggle */}
-      <AdminToggleContainer>
-        <Button
-          onClick={() => setIsEditing(!isEditing)}
-          className={isEditing ? 'btn-primary-red' : 'btn-primary-green'}
-        >
-          {isEditing ? 'Exit Edit Mode' : 'Enter Edit Mode'}
-        </Button>
-      </AdminToggleContainer>
+      {/* Admin Toggle - Only visible to admins */}
+      {isAdmin && (
+        <AdminToggleContainer>
+          <Button
+            onClick={() => setIsEditing(!isEditing)}
+            className={isEditing ? 'btn-primary-red' : 'btn-primary-green'}
+          >
+            {isEditing ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+          </Button>
+        </AdminToggleContainer>
+      )}
 
       {/* Website Sections */}
       <HeroSection data={churchData.heroSlides} isEditing={isEditing} onUpdate={handleUpdateSection} />

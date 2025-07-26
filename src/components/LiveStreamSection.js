@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
 import { PlayCircle, Wifi } from 'lucide-react'; // Import relevant icons
+import isEqual from 'lodash.isequal'
 
 const LiveStreamSectionContainer = styled(SectionContainer)`
   background-color: #F8F9FA; /* Light gray background */
@@ -117,8 +118,12 @@ const LiveStreamSection = ({ data, isEditing, onUpdate }) => {
   const [tempStreamData, setTempStreamData] = useState(data);
 
   useEffect(() => {
-    setTempStreamData(data);
-  }, [data]);
+    if(!isEditing && !isEqual(data, tempStreamData)){
+      console.log("tempStreamData changed:", tempStreamData)
+      setTempStreamData(data)
+    }
+  },
+  [data, isEditing]);
 
   const handleSave = () => {
     onUpdate('liveStream', tempStreamData);
