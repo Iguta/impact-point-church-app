@@ -123,7 +123,7 @@ const LiveStreamSection = ({ data, isEditing, onUpdate }) => {
       setTempStreamData(data)
     }
   },
-  [data, isEditing]);
+  [data,tempStreamData, isEditing]);
 
   const handleSave = () => {
     onUpdate('liveStream', tempStreamData);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Button, Icon, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
+import { Button, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
 import { MapPin, Calendar, Mail, Phone } from 'lucide-react';
 import isEqual from 'lodash.isequal'
 
@@ -72,7 +72,7 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
         setTempContact(data);
         console.log(tempContact)
     }
-  }, [data]);
+  }, [data, tempContact, isEditing]);
 
   const handleSaveContact = () => {
     onUpdate('contact', tempContact);
