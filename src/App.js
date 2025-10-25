@@ -121,7 +121,44 @@ const NavLinks = styled.ul`
   }
 
   @media (max-width: 768px) {
-    display: none; /* Hide navigation links on small screens */
+    display: none; /* Desktop links hidden on small screens */
+  }
+`;
+
+const MenuButton = styled.button`
+  display: none; /* hidden on desktop */
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.75rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  &:focus { outline: 2px solid #fff; outline-offset: 2px; }
+
+  @media (max-width: 768px) {
+    display: block; /* show on mobile */
+  }
+`;
+
+const MobileMenu = styled.div`
+  display: none;
+  position: fixed;
+  top: 64px; /* approx header height */
+  left: 0;
+  right: 0;
+  background: rgba(44, 62, 80, 0.98);
+  backdrop-filter: blur(10px);
+  padding: 1rem 1.25rem;
+  z-index: 999;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+  a { display: block; color: white; text-decoration: none; padding: 0.75rem 0; font-size: 1.1rem; }
+  a + a { border-top: 1px solid rgba(255,255,255,0.1); }
+
+  @media (max-width: 768px) {
+    display: block;
   }
 `;
 
@@ -177,21 +214,43 @@ const App = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [currentPath, setCurrentPath] = useState(
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  );
+
+  // Minimal client-side routing for /login without react-router
+  useEffect(() => {
+    const onPopState = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // (Reverted) removed animation/focus-trap side effects for simplicity
+
+  const navigate = (path) => {
+    if (typeof window !== 'undefined' && window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+      setCurrentPath(path);
+    }
+  };
 
   // Define allowed admin UIDs for the church website
   // IMPORTANT: Replace 'YOUR_ADMIN_UID_1' with the actual persistent UID from your Firebase Authentication
   // (e.g., from an Email/Password or Google login user).
   const allowedAdminUids = [
-    "H8cw5YK3nQcbuiB5g7cDF0viwMr1", // <--- REPLACE THIS WITH YOUR ACTUAL PERSISTENT UID
+    "gxD1Un1yKCSei1l6RYdIYu8GXW73", // <--- REPLACE THIS WITH YOUR ACTUAL PERSISTENT UID
     // "another_church_admin_uid", // Add more UIDs if needed
   ];
 
   // Check if the current user is an admin
   const isAdmin = userId && allowedAdminUids.includes(userId);
 
-  // Firestore document path: artifacts/{appId}/users/{userId}/church_website/main_church_data
+
+  // Firestore document path: artifacts/{appId}/public/church_website
   const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'local-dev-app-id';
-  const churchDocRef = userId && db ? doc(db, 'artifacts', appId, 'users', userId, 'church_website', 'main_church_data') : null;
+  // Note: Document references must have an even number of segments (collection/doc/collection/doc)
+  const churchDocRef = db ? doc(db, 'artifacts', appId, 'public', 'church_website') : null;
 
   // Real-time data fetching from Firestore
   useEffect(() => {
@@ -216,6 +275,8 @@ const App = () => {
       setDataLoading(false);
     }, (error) => {
       console.error("Error fetching church data:", error);
+      // Fallback to local initial data so site still renders
+      setChurchData(initialChurchData);
       setDataLoading(false);
     });
 
@@ -231,8 +292,15 @@ const App = () => {
         setHeaderScrolled(false);
       }
     };
+    const handleResize = () => {
+      if (window.innerWidth > 768 && menuOpen) setMenuOpen(false);
+    };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Function to update specific sections in Firestore
@@ -285,6 +353,16 @@ const App = () => {
     );
   }
 
+  // Dedicated login route: show admin login when path is /login
+  if (currentPath === '/login') {
+    return (
+      <AppContainer>
+        <GlobalStyle />
+        <AdminLogin auth={auth} onLoginSuccess={() => navigate('/')} />
+      </AppContainer>
+    );
+  }
+
   return (
     <AppContainer>
       <GlobalStyle /> {/* Apply global styles */}
@@ -302,7 +380,30 @@ const App = () => {
             <li><a href="#events">Events</a></li>
             <li><a href="#contact">Contact</a></li>
           </NavLinks>
+          <MenuButton
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? '\u2715' : '\u2630'}
+          </MenuButton>
         </Nav>
+        {menuOpen && (
+          <MobileMenu onClick={(e) => {
+            if (e.target.tagName === 'A') setMenuOpen(false);
+          }}>
+            <a href="#home">Home</a>
+            <a href="#about">About</a>
+            {/* <a href="#livestream">Live Stream</a> */}
+            <a href="#services">Services</a>
+            <a href="#sermons">Sermons</a>
+            <a href="#ministries">Ministries</a>
+            <a href="#events">Events</a>
+            <a href="#contact">Contact</a>
+            <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}>Admin Login</a>
+          </MobileMenu>
+        )}
       </Header>
 
       {/* Admin Toggle - Only visible to admins */}

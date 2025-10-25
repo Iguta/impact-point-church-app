@@ -41,9 +41,11 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
   const [tempData, setTempData] = useState(data);
 
   useEffect(() => {
-    if(!isEditing && isEqual(data, tempData))
-    setTempData(data);
-  }, [data, tempData, isEditing]);
+    // When not editing, sync local state from props only if changed
+    if (!isEditing && !isEqual(data, tempData)) {
+      setTempData(data);
+    }
+  }, [data, isEditing]);
 
   const handleSave = () => {
     onUpdate('about', tempData);

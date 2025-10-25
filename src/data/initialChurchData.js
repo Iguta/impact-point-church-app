@@ -3,7 +3,7 @@ export const initialChurchData = {
   heroSlides: [
     {
       id: "slide1",
-      imageUrl: "https://placehold.co/1920x1080/667eea/FFFFFF?text=Welcome+to+Impact+Point+Church",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/impact-point-church.firebasestorage.app/o/image-1.jpg?alt=media&token=aeb4110e-db0f-4fbc-b6ce-7b04f181b97c",
       title: "Welcome to Impact Point Church",
       subtitle: "Where Faith Meets Purpose - Making a Lasting Impact in Our Community",
       ctaPrimaryText: "Join Us This Sunday",
@@ -13,7 +13,7 @@ export const initialChurchData = {
     },
     {
       id: "slide2",
-      imageUrl: "https://placehold.co/1920x1080/764ba2/FFFFFF?text=Growing+in+Faith",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/impact-point-church.firebasestorage.app/o/image-2.jpg?alt=media&token=7f5dc801-bf43-46e4-8dfb-dd26fa21af53",
       title: "Growing in Faith Together",
       subtitle: "Discover Your Purpose and Connect with Our Community",
       ctaPrimaryText: "Explore Ministries",
@@ -23,7 +23,7 @@ export const initialChurchData = {
     },
     {
       id: "slide3",
-      imageUrl: "https://placehold.co/1920x1080/3498db/FFFFFF?text=Serving+Our+Community",
+      imageUrl: "https://firebasestorage.googleapis.com/v0/b/impact-point-church.firebasestorage.app/o/image-3.jpg?alt=media&token=229aa264-967c-4645-a1d0-e24e40f0199a",
       title: "Serving Our Community",
       subtitle: "Putting Love into Action, One Project at a Time",
       ctaPrimaryText: "See Events",
