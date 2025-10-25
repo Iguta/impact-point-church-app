@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { Button, Icon } from './UtilityComponents';
+import React, { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
+import { Button, Icon } from "./UtilityComponents";
+import { useFirebase } from "../context/FirebaseContext";
+import { ref, listAll, getDownloadURL } from "firebase/storage";
 
+// ---------------- STYLED COMPONENTS ----------------
 const HeroSectionContainer = styled.section`
   position: relative;
   height: 100vh;
@@ -13,25 +16,14 @@ const HeroSectionContainer = styled.section`
   overflow: hidden;
   background-size: cover;
   background-position: center;
-  transition: background-image 0.5s ease-in-out; /* Smooth transition for background */
-
-  /* Pseudo-element for floating effect from HTML */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="a"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.1"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><circle cx="50" cy="50" r="50" fill="url(%23a)"/></svg>') center/300px;
-    animation: float 6s ease-in-out infinite;
-  }
+  transition: background-image 0.8s ease-in-out;
 `;
 
 const Overlay = styled.div`
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%); /* Hero gradient with opacity */
+  background: ${({ overlayOpacity = 0.6 }) =>
+    `linear-gradient(135deg, rgba(102, 126, 234, ${overlayOpacity}) 0%, rgba(118, 75, 162, ${overlayOpacity}) 100%)`};
   z-index: 1;
 `;
 
@@ -45,9 +37,8 @@ const ContentWrapper = styled.div`
 const Title = styled.h1`
   font-size: 3.5rem;
   margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-  animation: slideInUp 1s ease-out; /* Animation from HTML */
-
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  animation: slideInUp 1s ease-out;
   @media (max-width: 768px) {
     font-size: 2.5rem;
   }
@@ -57,8 +48,7 @@ const Subtitle = styled.p`
   font-size: 1.3rem;
   margin-bottom: 2rem;
   opacity: 0.9;
-  animation: slideInUp 1s ease-out 0.3s both; /* Animation from HTML */
-
+  animation: slideInUp 1s ease-out 0.3s both;
   @media (max-width: 768px) {
     font-size: 1.1rem;
   }
@@ -69,8 +59,7 @@ const CtaButtons = styled.div`
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
-  animation: slideInUp 1s ease-out 0.6s both; /* Animation from HTML */
-
+  animation: slideInUp 1s ease-out 0.6s both;
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: center;
@@ -89,11 +78,9 @@ const CarouselControl = styled.button`
   z-index: 3;
   border-radius: 50%;
   transition: background 0.3s ease;
-
   &:hover {
     background: rgba(255, 255, 255, 0.4);
   }
-
   &.left {
     left: 1rem;
   }
@@ -118,49 +105,89 @@ const Dot = styled.button`
   border: none;
   cursor: pointer;
   transition: background 0.3s ease;
-
   &.active {
     background: white;
   }
 `;
 
-const HeroSection = ({ data, isEditing, onUpdate }) => {
+// ---------------- MAIN COMPONENT ----------------
+const HeroSection = ({ data = [], isEditing, onUpdate }) => {
+  const [slides, setSlides] = useState([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const slides = data; // Assuming data prop contains heroSlides array
+  const { db, storage } = useFirebase();
+  const isLoaded = useRef(false); // prevent re-fetch loops
+
+  // 🔹 Load images only once (guarded + cached)
+  useEffect(() => {
+    const loadSlides = async () => {
+      if (!storage || isLoaded.current) return;
+      isLoaded.current = true;
+
+      // Try cached data first
+      const cached = sessionStorage.getItem("heroSlides");
+      if (cached) {
+        setSlides(JSON.parse(cached));
+        return;
+      }
+
+      try {
+        const folderRef = ref(storage, "carousel");
+        const result = await listAll(folderRef);
+
+        const urls = [];
+        for (const item of result.items) {
+          // sequential loading to prevent Chrome overload
+          const url = await getDownloadURL(item);
+          urls.push(url);
+          await new Promise((res) => setTimeout(res, 100));
+        }
+
+        const fetchedSlides = urls.map((url, index) => ({
+          id: `slide${index + 1}`,
+          imageUrl: url,
+          title: data[index]?.title || `Slide ${index + 1}`,
+          subtitle:
+            data[index]?.subtitle ||
+            "Making a lasting impact in our community through faith and purpose.",
+          ctaPrimaryText: data[index]?.ctaPrimaryText || "Join Us",
+          ctaPrimaryLink: data[index]?.ctaPrimaryLink || "#services",
+          ctaSecondaryText: data[index]?.ctaSecondaryText || "Learn More",
+          ctaSecondaryLink: data[index]?.ctaSecondaryLink || "#about",
+        }));
+
+        setSlides(fetchedSlides);
+        sessionStorage.setItem("heroSlides", JSON.stringify(fetchedSlides));
+      } catch (err) {
+        console.error("Error fetching hero slides:", err);
+        setSlides(data);
+      }
+    };
+
+    loadSlides();
+  }, [storage, data]);
+
+  // 🔹 Auto-play carousel (runs once)
+  useEffect(() => {
+    if (isEditing || slides.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [slides, isEditing]);
+
+  if (slides.length === 0) return <p>Loading slides...</p>;
   const currentSlide = slides[currentSlideIndex];
 
-  // Auto-play carousel
-  useEffect(() => {
-    if (isEditing) return; // Disable auto-play in edit mode
-
-    const interval = setInterval(() => {
-      setCurrentSlideIndex((prevIndex) => (prevIndex + 1) % slides.length);
-    }, 8000); // Change slide every 8 seconds
-
-    return () => clearInterval(interval);
-  }, [slides.length, isEditing]);
-
-  const goToNextSlide = () => {
-    setCurrentSlideIndex((prevIndex) => (prevIndex + 1) % slides.length);
-  };
-
-  const goToPrevSlide = () => {
-    setCurrentSlideIndex((prevIndex) => (prevIndex - 1 + slides.length) % slides.length);
-  };
-
-  const goToSlide = (index) => {
-    setCurrentSlideIndex(index);
-  };
-
-  // Admin editing for slides (simplified for carousel)
-  // For a full admin experience, each slide would need its own editable fields
-  // For now, we'll just allow basic text/link updates through the initial data.
-  // A dedicated "Hero Slide Editor" component would be ideal for full CRUD.
-
   return (
-    <HeroSectionContainer id="home" style={{ backgroundImage: `url(${currentSlide.imageUrl})` }}>
-      <Overlay />
-      <ContentWrapper key={currentSlide.id}> {/* Key to re-render and re-trigger animations */}
+    <HeroSectionContainer
+      id="home"
+      style={{
+        backgroundImage: `url(${currentSlide.imageUrl})`,
+        backgroundPosition: "center",
+      }}
+    >
+      <Overlay overlayOpacity={currentSlide.overlayOpacity ?? 0.6} />
+      <ContentWrapper key={currentSlide.id}>
         <Title>{currentSlide.title}</Title>
         <Subtitle>{currentSlide.subtitle}</Subtitle>
         <CtaButtons>
@@ -177,11 +204,10 @@ const HeroSection = ({ data, isEditing, onUpdate }) => {
         </CtaButtons>
       </ContentWrapper>
 
-      {/* Carousel Controls */}
-      <CarouselControl className="left" onClick={goToPrevSlide}>
+      <CarouselControl className="left" onClick={() => setCurrentSlideIndex((prev) => (prev - 1 + slides.length) % slides.length)}>
         <Icon name="chevronLeft" size={32} />
       </CarouselControl>
-      <CarouselControl className="right" onClick={goToNextSlide}>
+      <CarouselControl className="right" onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % slides.length)}>
         <Icon name="chevronRight" size={32} />
       </CarouselControl>
 
@@ -189,8 +215,8 @@ const HeroSection = ({ data, isEditing, onUpdate }) => {
         {slides.map((_, index) => (
           <Dot
             key={index}
-            className={index === currentSlideIndex ? 'active' : ''}
-            onClick={() => goToSlide(index)}
+            className={index === currentSlideIndex ? "active" : ""}
+            onClick={() => setCurrentSlideIndex(index)}
           />
         ))}
       </DotIndicators>

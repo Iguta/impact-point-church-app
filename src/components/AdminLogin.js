@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import {signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import {signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { Button, Input, FormSpace } from './UtilityComponents';
 // Import specific icons from react-icons
-import { FaSignInAlt, FaSignOutAlt, FaEnvelope, FaLock, FaGoogle } from 'react-icons/fa';
+import { FaSignInAlt, FaSignOutAlt, FaEnvelope, FaLock } from 'react-icons/fa';
 
 const LoginContainer = styled.div`
   background-color: white; /* Card background */
@@ -44,18 +44,6 @@ const AdminLogin = ({ auth, onLoginSuccess }) => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setError(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      onLoginSuccess(); // Notify parent (App) that login was successful
-    } catch (err) {
-      console.error("Google login error:", err);
-      setError(err.message);
-    }
-  };
-
   const handleLogout = async () => {
     setError(null);
     try {
@@ -67,8 +55,8 @@ const AdminLogin = ({ auth, onLoginSuccess }) => {
     }
   };
 
-  // If user is already logged in (e.g., if they refreshed the page)
-  if (auth?.currentUser) {
+  // If user is logged in with a non-anonymous account, show welcome + logout
+  if (auth?.currentUser && !auth.currentUser.isAnonymous) {
     return (
       <LoginContainer>
         <LoginTitle>Welcome, {auth.currentUser.email || "Admin"}!</LoginTitle>
@@ -108,10 +96,6 @@ const AdminLogin = ({ auth, onLoginSuccess }) => {
           <FaSignInAlt size={20} style={{marginRight: '0.5rem'}} /> Login with Email
         </Button>
       </FormSpace>
-      <p style={{margin: '1rem 0', color: 'var(--text-color-light)'}}>OR</p>
-      <Button onClick={handleGoogleLogin} className="btn-secondary" style={{width: '100%', border: '1px solid var(--text-color-light)', color: 'var(--text-color)'}}>
-        <FaGoogle size={20} style={{marginRight: '0.5rem'}} /> Login with Google
-      </Button>
     </LoginContainer>
   );
 };
