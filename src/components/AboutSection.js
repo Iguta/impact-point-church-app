@@ -45,7 +45,7 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
     if (!isEditing && !isEqual(data, tempData)) {
       setTempData(data);
     }
-  }, [data, isEditing]);
+  }, [data, isEditing, tempData]);
 
   const handleSave = () => {
     onUpdate('about', tempData);

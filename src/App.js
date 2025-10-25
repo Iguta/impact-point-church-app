@@ -301,7 +301,7 @@ const App = () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [menuOpen]);
 
   // Function to update specific sections in Firestore
   const handleUpdateSection = async (sectionKey, newData) => {
