@@ -114,7 +114,7 @@ const Dot = styled.button`
 const HeroSection = ({ data = [], isEditing, onUpdate }) => {
   const [slides, setSlides] = useState([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const { db, storage } = useFirebase();
+  const { storage } = useFirebase();
   const isLoaded = useRef(false); // prevent re-fetch loops
 
   // 🔹 Load images only once (guarded + cached)
