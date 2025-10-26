@@ -83,7 +83,7 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
                 src={data.imageUrl}
                 alt="About Us"
                 style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/800x400/c3cfe2/555?text=About+Us+Image"; }}
+                onError={(e) => { e.target.onerror = null; e.target.src = "https://firebasestorage.googleapis.com/v0/b/impact-point-church.firebasestorage.app/o/IMG-20250810-WA0012.jpg?alt=media&token=16d6924b-3eea-4197-8899-f40b7d5933a6"; }}
               />
             )}
           </>
