@@ -8,6 +8,7 @@ import { ref, listAll, getDownloadURL } from "firebase/storage";
 const HeroSectionContainer = styled.section`
   position: relative;
   height: 100vh;
+  padding-top: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,7 +184,8 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
       id="home"
       style={{
         backgroundImage: `url(${currentSlide.imageUrl})`,
-        backgroundPosition: "center",
+        padding: "200px",
+        backgroundPosition: "center top 2px",
       }}
     >
       <Overlay overlayOpacity={currentSlide.overlayOpacity ?? 0.6} />
