@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FirebaseProvider, useFirebase } from './context/FirebaseContext';
 import { initialChurchData } from './data/initialChurchData';
 import { Button} from './components/UtilityComponents';
@@ -92,6 +92,12 @@ const App = () => {
   const [currentPath, setCurrentPath] = useState(
     typeof window !== 'undefined' ? window.location.pathname : '/'
   );
+
+  // Memoize the toast close handler to prevent unnecessary re-renders
+  const handleToastClose = useCallback(() => {
+    setToastMessage('');
+    setToastType('success');
+  }, []);
 
   // Minimal client-side routing for /login without react-router
   useEffect(() => {
@@ -247,10 +253,7 @@ const App = () => {
       <ToastNotification 
         message={toastMessage} 
         type={toastType}
-        onClose={() => {
-          setToastMessage('');
-          setToastType('success');
-        }} 
+        onClose={handleToastClose} 
       />
       {/* Admin Toggle - Only visible to admins */}
       {isAdmin && (

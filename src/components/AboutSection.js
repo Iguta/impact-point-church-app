@@ -67,12 +67,6 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
               onChange={(e) => setTempData({ ...tempData, text: e.target.value })}
               rows="10"
             />
-            <Input
-              type="text"
-              placeholder="Image URL"
-              value={tempData.imageUrl}
-              onChange={(e) => setTempData({ ...tempData, imageUrl: e.target.value })}
-            />
             <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save About</Button>
           </FormSpace>
         ) : (
