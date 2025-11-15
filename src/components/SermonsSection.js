@@ -206,7 +206,7 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
   const handleDeleteSermon = (id) => {
     const updatedSermons = tempSermons.filter(s => s.id !== id);
     setTempSermons(updatedSermons);
-    onUpdate('sermons', updatedSermons);
+    onUpdate('sermons', updatedSermons, 'delete');
   };
 
   // Sort sermons by date in descending order

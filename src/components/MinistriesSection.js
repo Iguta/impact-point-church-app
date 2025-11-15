@@ -63,7 +63,7 @@ const MinistriesSection = ({ data, isEditing, onUpdate }) => {
   const handleDeleteMinistry = (index) => {
     const updatedMinistries = tempMinistries.filter((_, i) => i !== index);
     setTempMinistries(updatedMinistries);
-    onUpdate('ministries', updatedMinistries);
+    onUpdate('ministries', updatedMinistries, 'delete');
   };
 
   return (

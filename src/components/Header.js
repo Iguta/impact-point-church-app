@@ -185,7 +185,7 @@ const Header = () => {
         {/* ✅ Clickable Logo (acts as Home) */}
         <Logo href="#home" shrink={headerScrolled}>
           <img
-            src="/images/logo-header.png"
+            src="/assets/logo-header.png"
             alt="Impact Point Church Logo"
           />
         </Logo>

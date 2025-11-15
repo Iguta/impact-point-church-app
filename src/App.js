@@ -13,6 +13,7 @@ import ContactSection from './components/ContactSection';
 import LiveStreamSection from './components/LiveStreamSection'; // Import LiveStreamSection
 import AdminLogin from './components/AdminLogin'; // Import AdminLogin component
 import FooterSection from './components/FooterSection';
+import { ToastNotification } from './utils/Toast';
 import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import styled, { createGlobalStyle } from 'styled-components';
 
@@ -86,6 +87,8 @@ const App = () => {
   const [churchData, setChurchData] = useState(initialChurchData);
   const [isEditing, setIsEditing] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
   const [currentPath, setCurrentPath] = useState(
     typeof window !== 'undefined' ? window.location.pathname : '/'
   );
@@ -112,6 +115,7 @@ const App = () => {
   const allowedAdminUids = [
     "gxD1Un1yKCSei1l6RYdIYu8GXW73", // <--- REPLACE THIS WITH YOUR ACTUAL PERSISTENT UID
     // "another_church_admin_uid", // Add more UIDs if needed
+    "wyna7iUTkVZg9FWoteMQAzSDKYS2"
   ];
 
   // Check if the current user is an admin
@@ -155,8 +159,21 @@ const App = () => {
   }, [churchDocRef, loadingFirebase, isAdmin]); // Added isAdmin to dependency array
 
 
+  // Mapping of section keys to user-friendly names
+  const sectionNames = {
+    heroSlides: 'Hero Section',
+    about: 'About Section',
+    liveStream: 'Live Stream Settings',
+    services: 'Services',
+    sermons: 'Sermons',
+    ministries: 'Ministries',
+    events: 'Events',
+    contact: 'Contact Information'
+  };
+
   // Function to update specific sections in Firestore
-  const handleUpdateSection = async (sectionKey, newData) => {
+  // actionType can be 'save', 'delete', or undefined (defaults to 'save')
+  const handleUpdateSection = async (sectionKey, newData, actionType = 'save') => {
     if (!churchDocRef) {
       console.error("Firestore document reference is not available.");
       return;
@@ -170,6 +187,13 @@ const App = () => {
     try {
       await updateDoc(churchDocRef, { [sectionKey]: newData });
       console.log(`${sectionKey} section updated successfully!`);
+      // Show success/delete message
+      const sectionName = sectionNames[sectionKey] || sectionKey;
+      const isDelete = actionType === 'delete';
+      setToastType(isDelete ? 'delete' : 'success');
+      setToastMessage(isDelete 
+        ? `${sectionName} deleted successfully!` 
+        : `${sectionName} saved successfully!`);
     } catch (error) {
       console.error(`Error updating ${sectionKey} section:`, error);
       alert(`Error saving changes: ${error.message}. Check console for details.`);
@@ -219,6 +243,15 @@ const App = () => {
     <AppContainer>
       <GlobalStyle /> {/* Apply global styles */}
       <Header />
+      {/* Toast Notification */}
+      <ToastNotification 
+        message={toastMessage} 
+        type={toastType}
+        onClose={() => {
+          setToastMessage('');
+          setToastType('success');
+        }} 
+      />
       {/* Admin Toggle - Only visible to admins */}
       {isAdmin && (
         <AdminToggleContainer>

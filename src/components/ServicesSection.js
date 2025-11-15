@@ -93,7 +93,7 @@ const ServicesSection = ({ data, isEditing, onUpdate }) => {
   const handleDeleteService = (id) => {
     const updatedServices = tempServices.filter(s => s.id !== id);
     setTempServices(updatedServices);
-    onUpdate('services', updatedServices);
+    onUpdate('services', updatedServices, 'delete');
   };
 
   return (
