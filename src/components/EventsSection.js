@@ -94,7 +94,7 @@ const EventsSection = ({ data, isEditing, onUpdate }) => {
   const handleDeleteEvent = (id) => {
     const updatedEvents = tempEvents.filter(e => e.id !== id);
     setTempEvents(updatedEvents);
-    onUpdate('events', updatedEvents);
+    onUpdate('events', updatedEvents, 'delete');
   };
 
   // Sort events by date (assuming date is sortable, like YYYY-MM-DD or full date string)
