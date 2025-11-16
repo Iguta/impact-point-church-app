@@ -4,6 +4,10 @@ import { Button, Input, TextArea, FormSpace, SectionContainer, SectionTitle } fr
 import { MapPin, Calendar, Mail, Phone } from 'lucide-react';
 import isEqual from 'lodash.isequal'
 
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useFirebase } from '../context/FirebaseContext';
+
+
 // Reusing SectionContainer and SectionTitle from UtilityComponents
 const ContactGrid = styled.div`
   display: grid;
@@ -59,6 +63,7 @@ const Form = styled.form`
 `;
 
 const ContactSection = ({ data, isEditing, onUpdate }) => {
+  const {db} = useFirebase();
   const [tempContact, setTempContact] = useState(data);
   const [formData, setFormData] = useState({
     name: '',
@@ -83,12 +88,39 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form Submitted:", formData);
-    alert("Thank you for your message! We'll get back to you soon."); // As per HTML
-    setFormData({ name: '', email: '', subject: '', message: '' }); // Clear form
-  };
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!db) {
+    alert("Database not ready. Please try again.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "contactMessages"), {
+      name: formData.name,
+      email: formData.email,
+      subject: formData.subject,
+      message: formData.message,
+      createdAt: serverTimestamp(),
+    });
+
+    alert("Thank you for your message! We'll get back to you soon.");
+
+    // Reset form
+    setFormData({
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    });
+
+  } catch (error) {
+    console.error("Error sending message:", error);
+    alert("There was an issue sending your message. Please try again.");
+  }
+};
+
 
   return (
     <SectionContainer id="contact">
