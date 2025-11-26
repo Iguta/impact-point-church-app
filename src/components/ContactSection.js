@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
-import { MapPin, Calendar, Mail, Phone } from 'lucide-react';
+import { MapPin, Calendar, Mail, Phone, ArrowUp } from 'lucide-react';
 import isEqual from 'lodash.isequal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
@@ -74,6 +74,58 @@ const MapTitle = styled.h3`
   }
 `;
 
+const ScrollToTopButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #1A365D;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  margin: 2rem 0 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 10;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+
+  &:hover {
+    background: #2a4a6d;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #1A365D;
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 640px) {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+`;
+
 const ContactInfoCard = styled.div`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* from HTML */
   color: white;
@@ -128,6 +180,13 @@ const ContactSection = ({ data, isEditing, onUpdate, onShowToast }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mapRef, isMapVisible] = useScrollAnimation({ threshold: 0.1 });
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   useEffect(() => {
     if(!isEditing && !isEqual(data, tempContact)){
@@ -368,6 +427,18 @@ const ContactSection = ({ data, isEditing, onUpdate, onShowToast }) => {
             <Button onClick={handleSaveContact} className="bg-indigo-600">Save Map</Button>
           </FormSpace>
         </MapContainer>
+      )}
+
+      {/* Scroll to Top Button */}
+      {!isEditing && (
+        <ScrollToTopButton
+          onClick={scrollToTop}
+          aria-label="Back to top"
+          title="Back to top"
+        >
+          <ArrowUp />
+          <span>Back to Top</span>
+        </ScrollToTopButton>
       )}
     </SectionContainer>
   );
