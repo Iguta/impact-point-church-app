@@ -6,12 +6,61 @@ import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 // Reusing SectionContainer and SectionTitle from UtilityComponents
 const AboutContent = styled.div`
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   text-align: center;
   opacity: ${({ isVisible }) => (isVisible ? 1 : 0)};
   transform: translateY(${({ isVisible }) => (isVisible ? 0 : '30px')});
   transition: opacity 0.8s ease, transform 0.8s ease;
+`;
+
+const MissionVisionGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr; /* Mobile: single column */
+  gap: 2rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem;
+  }
+`;
+
+const MissionVisionCard = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  @media (min-width: 640px) {
+    padding: 2.5rem;
+    border-radius: 15px;
+  }
+
+  @media (min-width: 1024px) {
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+  }
+`;
+
+const CardTitle = styled.h3`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  text-align: center;
+
+  @media (min-width: 640px) {
+    font-size: 1.75rem;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 2rem;
+  }
 `;
 
 const AboutText = styled.p`
@@ -96,41 +145,109 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
     onUpdate('about', tempData);
   };
 
+  // Ensure we have the right data structure (support both old and new format)
+  const missionData = data?.mission || (data?.title ? { title: data.title, text: data.text } : { title: "Our Mission", text: "" });
+  const visionData = data?.vision || { title: "Our Vision", text: "" };
+
   return (
     <AboutSectionContainer id="about" role="region" aria-labelledby="about-title">
       <AboutContent ref={contentRef} isVisible={isVisible}>
-        <SectionTitle id="about-title">Our Mission</SectionTitle>
+        <SectionTitle id="about-title">About Us</SectionTitle>
         {isEditing ? (
           <FormSpace>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>Mission</h3>
             <Input
               type="text"
-              value={tempData.title || ''}
-              onChange={(e) => setTempData({ ...tempData, title: e.target.value })}
+              placeholder="Mission Title"
+              value={tempData?.mission?.title || tempData?.title || ''}
+              onChange={(e) => setTempData({ 
+                ...tempData, 
+                mission: { ...tempData.mission, title: e.target.value },
+                title: e.target.value // Support old format
+              })}
               aria-label="Mission title"
             />
             <TextArea
-              value={tempData.text || ''}
-              onChange={(e) => setTempData({ ...tempData, text: e.target.value })}
-              rows="10"
+              placeholder="Mission Text"
+              value={tempData?.mission?.text || tempData?.text || ''}
+              onChange={(e) => setTempData({ 
+                ...tempData, 
+                mission: { ...tempData.mission, text: e.target.value },
+                text: e.target.value // Support old format
+              })}
+              rows="6"
               aria-label="Mission description"
             />
+            
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem', color: '#1f2937' }}>Vision</h3>
+            <Input
+              type="text"
+              placeholder="Vision Title"
+              value={tempData?.vision?.title || ''}
+              onChange={(e) => setTempData({ 
+                ...tempData, 
+                vision: { ...tempData.vision, title: e.target.value }
+              })}
+              aria-label="Vision title"
+            />
+            <TextArea
+              placeholder="Vision Text"
+              value={tempData?.vision?.text || ''}
+              onChange={(e) => setTempData({ 
+                ...tempData, 
+                vision: { ...tempData.vision, text: e.target.value }
+              })}
+              rows="6"
+              aria-label="Vision description"
+            />
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem', color: '#1f2937' }}>Image URL (Optional)</h3>
+            <Input
+              type="text"
+              placeholder="Image URL"
+              value={tempData?.imageUrl || ''}
+              onChange={(e) => setTempData({ ...tempData, imageUrl: e.target.value })}
+              aria-label="About image URL"
+            />
+            
             <Button onClick={handleSave} className="bg-indigo-600">Save About</Button>
           </FormSpace>
         ) : (
           <>
-            <AboutText>
-              {data?.text ? data.text.split('\n').map((line, i) => (
-                <React.Fragment key={i}>
-                  {line}
-                  {i < data.text.split('\n').length - 1 && <br />}
-                </React.Fragment>
-              )) : 'Our mission is to make a lasting impact in our community through faith and purpose.'}
-            </AboutText>
+            <MissionVisionGrid>
+              {/* Mission Card */}
+              <MissionVisionCard>
+                <CardTitle>{missionData.title}</CardTitle>
+                <AboutText>
+                  {missionData.text ? missionData.text.split('\n').map((line, i) => (
+                    <React.Fragment key={i}>
+                      {line}
+                      {i < missionData.text.split('\n').length - 1 && <br />}
+                    </React.Fragment>
+                  )) : 'Our mission is to make a lasting impact in our community through faith and purpose.'}
+                </AboutText>
+              </MissionVisionCard>
+
+              {/* Vision Card */}
+              <MissionVisionCard>
+                <CardTitle>{visionData.title}</CardTitle>
+                <AboutText>
+                  {visionData.text ? visionData.text.split('\n').map((line, i) => (
+                    <React.Fragment key={i}>
+                      {line}
+                      {i < visionData.text.split('\n').length - 1 && <br />}
+                    </React.Fragment>
+                  )) : 'Our vision is to be a beacon of hope and transformation in our community.'}
+                </AboutText>
+              </MissionVisionCard>
+            </MissionVisionGrid>
+
+            {/* Image below Mission and Vision */}
             {(data?.imageUrl || tempData?.imageUrl) && (
               <AboutImageWrapper>
                 <img
                   src={data?.imageUrl || tempData?.imageUrl}
-                  alt={tempData.title || data?.title || 'About Impact Point Church'}
+                  alt="About Impact Point Church"
                   style={{
                     width: '100%',
                     height: 'auto',

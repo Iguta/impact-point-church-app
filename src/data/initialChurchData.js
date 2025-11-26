@@ -33,8 +33,14 @@ export const initialChurchData = {
     },
   ],
   about: {
-    title: "Our Mission",
-    text: "At Impact Point Church, we believe that every person has the potential to make a meaningful impact in their community and beyond. We are a vibrant, welcoming community dedicated to growing in faith, serving others, and creating positive change in our world.\n\nFounded on the principles of love, compassion, and service, we strive to be a place where everyone can find their purpose and make a difference. Whether you're taking your first steps in faith or have been walking with God for years, you'll find a home here.",
+    mission: {
+      title: "Our Mission",
+      text: "At Impact Point Church, we believe that every person has the potential to make a meaningful impact in their community and beyond. We are a vibrant, welcoming community dedicated to growing in faith, serving others, and creating positive change in our world.\n\nFounded on the principles of love, compassion, and service, we strive to be a place where everyone can find their purpose and make a difference. Whether you're taking your first steps in faith or have been walking with God for years, you'll find a home here.",
+    },
+    vision: {
+      title: "Our Vision",
+      text: "Impact Point Church envisions a transformed community where every individual discovers their God-given purpose and becomes an active agent of positive change. We see a vibrant, multi-generational church family that serves as a spiritual home for those seeking authentic faith and a launching pad for those ready to make a lasting impact.\n\nOur vision extends beyond our walls—we imagine neighborhoods where families are strengthened, where the marginalized find hope and support, and where the next generation is equipped with unshakeable faith and character. We envision a church that bridges cultural and generational divides, creating a tapestry of diverse voices united in love and mission.\n\nWe dream of a church that doesn't just exist in the community, but transforms it through intentional acts of service, compassionate outreach, and the unwavering message of God's grace. We see lives restored, relationships reconciled, and communities revitalized as we faithfully serve at the intersection of faith and action.\n\nOur vision includes equipping every believer to live out their calling—whether in their workplace, their neighborhood, or across the globe—knowing that true impact happens when faith moves from the sanctuary to the streets, from Sunday service to everyday service.",
+    },
     imageUrl: "/images/mission.jpg", // Image should be in public/images/ folder
   },
   liveStream: { // NEW Live Stream data object
