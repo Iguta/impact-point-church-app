@@ -11,23 +11,24 @@ import {
 // ------------------ STYLED COMPONENTS ------------------
 // Mobile-first approach: base styles are for mobile, then scale up
 const HeaderContainer = styled.header`
-  background: linear-gradient(135deg, #2c3e50, #3498db);
+  background: ${({ scrolled }) => (scrolled ? '#1A365D' : 'transparent')};
   color: white;
   position: fixed;
   top: 0;
   width: 100%;
   z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
+  box-shadow: ${({ scrolled }) => (scrolled ? '0 4px 15px rgba(0, 0, 0, 0.15)' : 'none')};
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${({ hidden }) => (hidden ? "translateY(-100%)" : "translateY(0)")};
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  backdrop-filter: ${({ scrolled }) => (scrolled ? 'none' : 'blur(10px)')};
+  -webkit-backdrop-filter: ${({ scrolled }) => (scrolled ? 'none' : 'blur(10px)')};
+
+  /* Add text shadow when transparent for better readability over hero images */
+  text-shadow: ${({ scrolled }) => (scrolled ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.3)')};
 
   &.scrolled {
-    background: linear-gradient(
-      135deg,
-      rgba(44, 62, 80, 0.98),
-      rgba(52, 152, 219, 0.98)
-    );
+    background: #1A365D;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   }
 `;
@@ -96,28 +97,29 @@ const NavLinks = styled.ul`
 
   @media (min-width: 992px) {
     display: flex;
-    gap: 1.5rem;
+    gap: 0.75rem; /* Tightened spacing */
   }
 
   @media (min-width: 1280px) {
-    gap: 2rem;
+    gap: 1rem; /* Tightened spacing */
   }
 
   a {
     color: white;
     text-decoration: none;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.875rem; /* Slightly reduced padding */
     border-radius: 8px;
     display: flex;
     align-items: center;
     font-size: 0.9375rem; /* 15px base */
-    font-weight: 500;
+    font-weight: 600; /* Semi-bold */
     position: relative;
     transition: all 0.3s ease;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 
     @media (min-width: 1280px) {
       font-size: 1rem;
-      padding: 0.625rem 1.25rem;
+      padding: 0.625rem 1rem; /* Slightly reduced padding */
     }
 
     &:hover,
@@ -180,11 +182,13 @@ const MobileMenu = styled.div`
   top: ${({ headerHeight }) => `${headerHeight}px`};
   left: 0;
   right: 0;
-  background: rgba(44, 62, 80, 0.98);
-  backdrop-filter: blur(10px);
+  background: rgba(26, 54, 93, 0.85); /* Semi-transparent for glassmorphism */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   padding: 1rem;
   z-index: 999;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   animation: slideInDown 0.3s ease-out;
   max-height: calc(100vh - ${({ headerHeight }) => `${headerHeight}px`});
   overflow-y: auto;
@@ -211,10 +215,11 @@ const MobileMenu = styled.div`
     text-decoration: none;
     padding: 1rem;
     font-size: 1.0625rem; /* 17px */
-    font-weight: 500;
+    font-weight: 600; /* Semi-bold */
     border-radius: 8px;
     transition: all 0.3s ease;
     min-height: 48px; /* Touch target */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 
     &:hover,
     &:focus {
@@ -342,6 +347,7 @@ const Header = () => {
     <HeaderContainer 
       className={headerScrolled ? "scrolled" : ""} 
       hidden={hidden}
+      scrolled={headerScrolled}
       role="banner"
     >
       <Nav role="navigation" aria-label="Main navigation">
