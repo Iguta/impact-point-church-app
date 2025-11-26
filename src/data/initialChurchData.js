@@ -35,7 +35,7 @@ export const initialChurchData = {
   about: {
     title: "Our Mission",
     text: "At Impact Point Church, we believe that every person has the potential to make a meaningful impact in their community and beyond. We are a vibrant, welcoming community dedicated to growing in faith, serving others, and creating positive change in our world.\n\nFounded on the principles of love, compassion, and service, we strive to be a place where everyone can find their purpose and make a difference. Whether you're taking your first steps in faith or have been walking with God for years, you'll find a home here.",
-  imageUrl: "../images/mission.jpg",
+    imageUrl: "/images/mission.jpg", // Image should be in public/images/ folder
   },
   liveStream: { // NEW Live Stream data object
     isLive: false, // Set to true when streaming
@@ -131,10 +131,11 @@ export const initialChurchData = {
     { name: "Seniors Ministry", description: "Fellowship, Bible study, and special activities designed for our senior community members." },
   ],
   contact: {
-    address: "123 Faith Avenue\nIndianapolis, IN 46201",
+    address: "546 E 17th St #100\nIndianapolis, IN 46202",
     serviceTimes: "Sundays at 9:00 AM & 11:00 AM",
     email: "info@impactpointchurch.org",
     phone: "+1 (317) 555-PRAY",
     officeHours: "Monday - Friday: 9:00 AM - 5:00 PM\nSaturday: 10:00 AM - 2:00 PM",
+    mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2910.0504771023648!2d-86.15001572436468!3d39.79056309351256!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x886b50e3a13e5617%3A0x6ab50bd5429bd61c!2s546%20E%2017th%20St%20%23100%2C%20Indianapolis%2C%20IN%2046202!5e1!3m2!1sen!2sus!4v1764119954880!5m2!1sen!2sus",
   },
 };
