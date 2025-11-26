@@ -117,7 +117,7 @@ const Form = styled.form`
   }
 `;
 
-const ContactSection = ({ data, isEditing, onUpdate }) => {
+const ContactSection = ({ data, isEditing, onUpdate, onShowToast }) => {
   const {db} = useFirebase();
   const [tempContact, setTempContact] = useState(data);
   const [formData, setFormData] = useState({
@@ -126,6 +126,7 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
     subject: '',
     message: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mapRef, isMapVisible] = useScrollAnimation({ threshold: 0.1 });
 
   useEffect(() => {
@@ -143,38 +144,56 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-const handleFormSubmit = async (e) => {
-  e.preventDefault();
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!db) {
-    alert("Database not ready. Please try again.");
-    return;
-  }
+    if (!db) {
+      if (onShowToast) {
+        onShowToast("Database not ready. Please try again.", 'error');
+      } else {
+        alert("Database not ready. Please try again.");
+      }
+      return;
+    }
 
-  try {
-    await addDoc(collection(db, "contactMessages"), {
-      name: formData.name,
-      email: formData.email,
-      subject: formData.subject,
-      message: formData.message,
-      createdAt: serverTimestamp(),
-    });
+    setIsSubmitting(true);
 
-    alert("Thank you for your message! We'll get back to you soon.");
+    try {
+      await addDoc(collection(db, "contactMessages"), {
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        createdAt: serverTimestamp(),
+      });
 
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    });
+      // Show success toast notification
+      if (onShowToast) {
+        onShowToast("Thank you for your message! We'll get back to you soon.", 'success');
+      } else {
+        alert("Thank you for your message! We'll get back to you soon.");
+      }
 
-  } catch (error) {
-    console.error("Error sending message:", error);
-    alert("There was an issue sending your message. Please try again.");
-  }
-};
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
+
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Show error toast notification
+      if (onShowToast) {
+        onShowToast("There was an issue sending your message. Please try again.", 'error');
+      } else {
+        alert("There was an issue sending your message. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
 
   return (
@@ -293,8 +312,12 @@ const handleFormSubmit = async (e) => {
                 required
               ></TextArea>
             </div>
-            <Button type="submit" className="btn-primary">
-              Send Message
+            <Button 
+              type="submit" 
+              className="btn-primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Sending...' : 'Send Message'}
             </Button>
           </Form>
         </ContactFormCard>
