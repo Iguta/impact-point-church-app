@@ -69,7 +69,7 @@ const Logo = styled.a`
   }
 
   img {
-    height: ${({ shrink }) => (shrink ? "40px" : "48px")}; /* Mobile size */
+    height: ${({ shrink }) => (shrink ? "64px" : "72px")}; /* Mobile size - increased for readability */
     width: auto;
     object-fit: contain;
     transition: height 0.3s ease;
@@ -78,13 +78,13 @@ const Logo = styled.a`
 
   @media (min-width: 640px) {
     img {
-      height: ${({ shrink }) => (shrink ? "45px" : "54px")};
+      height: ${({ shrink }) => (shrink ? "72px" : "80px")};
     }
   }
 
   @media (min-width: 1024px) {
     img {
-      height: ${({ shrink }) => (shrink ? "50px" : "60px")};
+      height: ${({ shrink }) => (shrink ? "80px" : "90px")};
     }
   }
 `;
@@ -359,10 +359,9 @@ const Header = () => {
           aria-label="Impact Point Church - Home"
         >
           <img
-            src="/assets/logo-header.png"
+            src="/assets/logo-header.webp"
             alt="Impact Point Church Logo"
             width="auto"
-            height={headerScrolled ? "50" : "60"}
           />
         </Logo>
 

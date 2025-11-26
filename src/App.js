@@ -157,21 +157,6 @@ const GlobalStyle = createGlobalStyle`
     border-radius: 4px;
   }
 
-  /* Skip to content link for accessibility */
-  .skip-to-content {
-    position: absolute;
-    top: -40px;
-    left: 0;
-    background: var(--color-primary);
-    color: white;
-    padding: 8px 16px;
-    text-decoration: none;
-    z-index: 10000;
-    
-    &:focus {
-      top: 0;
-    }
-  }
 
   /* Image optimization */
   img {
@@ -381,10 +366,6 @@ const App = () => {
     <AppContainer>
       <GlobalStyle /> {/* Apply global styles */}
       <SEO /> {/* SEO meta tags and structured data */}
-      {/* Skip to content link for accessibility */}
-      <a href="#home" className="skip-to-content" tabIndex="0">
-        Skip to main content
-      </a>
       <Header />
       {/* Toast Notification */}
       <ToastNotification 

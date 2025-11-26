@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Icon } from './UtilityComponents';
 
 const Footer = styled.footer`
-  background: #2c3e50; /* Original footer background color */
+  background: #1A365D; /* Matching navbar color */
   color: white;
   text-align: center;
   padding: 2.5rem 1rem 1.5rem; /* Mobile-first */
@@ -139,7 +139,7 @@ const FooterSection = () => (
     <FooterContent>
       <FooterContainer>
         <FooterLogo 
-          src="/assets/logo-header.png" 
+          src="/assets/logo-header.webp" 
           alt="Impact Point Church logo"
           width="160"
           height="auto"
