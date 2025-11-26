@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Button, Icon } from "./UtilityComponents";
+import { Button, Icon, Input, TextArea, FormSpace } from "./UtilityComponents";
+import isEqual from "lodash.isequal";
 import { useFirebase } from "../context/FirebaseContext";
-import { ref, listAll, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, query, where, getDocs, addDoc, doc, setDoc } from "firebase/firestore";
 
 // ---------------- STYLED COMPONENTS - Mobile-first approach ----------------
 const HeroSectionContainer = styled.section`
@@ -10,23 +12,58 @@ const HeroSectionContainer = styled.section`
   min-height: 100vh;
   height: 100vh;
   padding-top: 64px; /* Mobile header height */
+  padding-left: 1rem; /* Mobile padding to ensure image visibility */
+  padding-right: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   color: white;
   overflow: hidden;
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
   transition: background-image 0.8s ease-in-out;
+
+  /* Background image using pseudo-element to position below header */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 64px; /* Start below header on mobile */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    z-index: 0;
+    transition: background-image 0.8s ease-in-out;
+    background-image: ${props => {
+      if (!props.backgroundImage) return 'none';
+      // Check if it's already a CSS value (gradient or url())
+      if (props.backgroundImage.startsWith('linear-gradient') || props.backgroundImage.startsWith('url(')) {
+        return props.backgroundImage;
+      }
+      // Otherwise, it's a URL string, wrap it in url()
+      return `url(${props.backgroundImage})`;
+    }};
+
+    @media (min-width: 640px) {
+      top: 72px; /* Start below header on tablet */
+    }
+
+    @media (min-width: 1024px) {
+      top: 80px; /* Start below header on desktop */
+    }
+  }
 
   @media (min-width: 640px) {
     padding-top: 72px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 
   @media (min-width: 1024px) {
     padding-top: 80px;
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 `;
 
@@ -225,70 +262,759 @@ const Dot = styled.button`
   }
 `;
 
+const EditModeContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10;
+  overflow-y: auto;
+  padding: 2rem 1rem;
+  
+  @media (min-width: 640px) {
+    padding: 3rem 2rem;
+  }
+`;
+
+const EditFormContainer = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  color: #1f2937;
+  
+  @media (min-width: 640px) {
+    padding: 2.5rem;
+  }
+`;
+
+const EditFormTitle = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+`;
+
+const SlideEditorCard = styled.div`
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background: #f9fafb;
+`;
+
+const SlideEditorTitle = styled.h3`
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1f2937;
+`;
+
+const AdminButtonsContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+`;
+
+const FileUploadContainer = styled.div`
+  position: relative;
+  margin-bottom: 1rem;
+`;
+
+const FileInput = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #667eea;
+    background: #f3f4f6;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  &::file-selector-button {
+    padding: 0.5rem 1rem;
+    margin-right: 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #667eea;
+    color: white;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: #5568d3;
+    }
+  }
+`;
+
+const UploadStatus = styled.div`
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${props => {
+    if (props.status === 'uploading') return '#f59e0b';
+    if (props.status === 'success') return '#22c55e';
+    if (props.status === 'error') return '#ef4444';
+    return '#6b7280';
+  }};
+`;
+
+const ImagePreview = styled.div`
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  
+  img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+    object-fit: cover;
+  }
+`;
+
+const OrDivider = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  &::before {
+    margin-right: 0.5rem;
+  }
+
+  &::after {
+    margin-left: 0.5rem;
+  }
+`;
+
 // ---------------- MAIN COMPONENT ----------------
 const HeroSection = ({ data = [], isEditing, onUpdate }) => {
+  const { storage, db } = useFirebase();
+
+  // Helper function to calculate file hash using Web Crypto API
+  // Note: This creates a copy/clone of the file so it can still be used for upload
+  const calculateFileHash = async (file) => {
+    try {
+      // Clone the file slice to avoid consuming the original file
+      // We can read file.slice(0) which creates a copy without consuming the original
+      const fileSlice = file.slice(0);
+      const arrayBuffer = await fileSlice.arrayBuffer();
+      
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      console.log('File hash calculated:', hashHex.substring(0, 16) + '...');
+      return hashHex;
+    } catch (error) {
+      console.error('Error calculating file hash:', error);
+      throw error;
+    }
+  };
+
+  // Check if file hash already exists in Firestore
+  const checkDuplicateFile = async (fileHash) => {
+    if (!db) {
+      console.log('DB not available for duplicate check');
+      return null;
+    }
+    
+    try {
+      console.log('Checking for duplicate file with hash:', fileHash.substring(0, 16) + '...', 'Full hash length:', fileHash.length);
+      const fileHashesRef = collection(db, 'fileHashes');
+      
+      // Query for the hash
+      const q = query(fileHashesRef, where('hash', '==', fileHash));
+      const querySnapshot = await getDocs(q);
+      
+      console.log('Query result:', querySnapshot.empty ? 'No duplicates found' : `${querySnapshot.size} duplicate(s) found`);
+      
+      // Also check all documents for debugging (remove this later)
+      const allDocsSnapshot = await getDocs(fileHashesRef);
+      console.log('Total documents in fileHashes collection:', allDocsSnapshot.size);
+      if (allDocsSnapshot.size > 0) {
+        console.log('Sample hashes in collection:');
+        allDocsSnapshot.docs.slice(0, 3).forEach((doc, idx) => {
+          const data = doc.data();
+          console.log(`  Doc ${idx + 1}: hash=${data.hash?.substring(0, 16)}..., url=${data.url?.substring(0, 50)}...`);
+        });
+      }
+      
+      if (!querySnapshot.empty) {
+        // Duplicate found, return existing URL
+        const existingDoc = querySnapshot.docs[0];
+        const existingUrl = existingDoc.data().url;
+        console.log('✅ Duplicate found! Existing URL:', existingUrl);
+        return existingUrl;
+      }
+      console.log('❌ No duplicate found - will proceed with upload');
+      return null;
+    } catch (error) {
+      console.error('❌ Error checking duplicate file:', error);
+      console.error('Error details:', error.message, error.code);
+      // If query fails, we'll still proceed with upload to avoid blocking
+      return null;
+    }
+  };
+
+  // Store file hash and URL in Firestore for future duplicate detection
+  const storeFileHash = async (fileHash, fileUrl, fileName) => {
+    if (!db) {
+      console.warn('DB not available for storing file hash');
+      return;
+    }
+    
+    try {
+      console.log('Storing file hash:', fileHash.substring(0, 16) + '...');
+      const fileHashesRef = collection(db, 'fileHashes');
+      await addDoc(fileHashesRef, {
+        hash: fileHash,
+        url: fileUrl,
+        fileName: fileName,
+        uploadedAt: new Date().toISOString(),
+        storagePath: `carousel/${fileName}`
+      });
+      console.log('File hash stored successfully');
+    } catch (error) {
+      console.error('Error storing file hash:', error);
+      // Don't throw - hash storage failure shouldn't block upload
+    }
+  };
+
   const [slides, setSlides] = useState([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const { storage } = useFirebase();
-  const isLoaded = useRef(false); // prevent re-fetch loops
+  const [tempSlides, setTempSlides] = useState([]);
+  const [editingSlide, setEditingSlide] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState({}); // Track upload status per slide
+  const [newSlide, setNewSlide] = useState({
+    imageUrl: '',
+    title: '',
+    subtitle: '',
+    ctaPrimaryText: '',
+    ctaPrimaryLink: '',
+    ctaSecondaryText: '',
+    ctaSecondaryLink: '',
+    overlayOpacity: 0.6
+  });
+  const [newSlideUploadStatus, setNewSlideUploadStatus] = useState(null);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
 
-  // 🔹 Load images only once (guarded + cached)
+  // Use data directly from Firestore (no Storage fetching needed)
   useEffect(() => {
-    const loadSlides = async () => {
-      if (!storage || isLoaded.current) return;
-      isLoaded.current = true;
-
-      // Try cached data first
-      const cached = sessionStorage.getItem("heroSlides");
-      if (cached) {
-        setSlides(JSON.parse(cached));
-        return;
+    if (data && Array.isArray(data) && data.length > 0) {
+      setSlides(data);
+      // Reset to first slide if current index is out of bounds
+      setCurrentSlideIndex((prev) => (prev >= data.length ? 0 : prev));
+      if (!isEditing) {
+        setTempSlides(data);
       }
+    }
+  }, [data, isEditing]);
 
-      try {
-        const folderRef = ref(storage, "carousel");
-        const result = await listAll(folderRef);
-
-        const urls = [];
-        for (const item of result.items) {
-          // sequential loading to prevent Chrome overload
-          const url = await getDownloadURL(item);
-          urls.push(url);
-          await new Promise((res) => setTimeout(res, 100));
-        }
-
-        const fetchedSlides = urls.map((url, index) => ({
-          id: `slide${index + 1}`,
-          imageUrl: url,
-          title: data[index]?.title || `Slide ${index + 1}`,
-          subtitle:
-            data[index]?.subtitle ||
-            "Making a lasting impact in our community through faith and purpose.",
-          ctaPrimaryText: data[index]?.ctaPrimaryText || "Join Us",
-          ctaPrimaryLink: data[index]?.ctaPrimaryLink || "#services",
-          ctaSecondaryText: data[index]?.ctaSecondaryText || "Learn More",
-          ctaSecondaryLink: data[index]?.ctaSecondaryLink || "#about",
-        }));
-
-        setSlides(fetchedSlides);
-        sessionStorage.setItem("heroSlides", JSON.stringify(fetchedSlides));
-      } catch (err) {
-        console.error("Error fetching hero slides:", err);
-        setSlides(data);
-      }
-    };
-
-    loadSlides();
-  }, [storage, data]);
-
-  // 🔹 Auto-play carousel (runs once)
+  // Sync tempSlides when entering edit mode
   useEffect(() => {
-    if (isEditing || slides.length === 0) return;
+    if (isEditing && !isEqual(slides, tempSlides) && slides.length > 0) {
+      setTempSlides(slides);
+    }
+  }, [isEditing, slides, tempSlides]);
+
+  // Auto-play carousel with pause on hover
+  useEffect(() => {
+    // Only auto-play if: not editing, has multiple slides, and not paused
+    if (isEditing || slides.length <= 1 || isCarouselPaused) {
+      return;
+    }
+
     const interval = setInterval(() => {
       setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
-    }, 8000);
+    }, 5000); // Transition every 5 seconds
+
     return () => clearInterval(interval);
-  }, [slides, isEditing]);
+  }, [slides.length, isEditing, isCarouselPaused]);
+
+  // Admin editing functions
+  const handleSaveSlides = () => {
+    onUpdate('heroSlides', tempSlides);
+  };
+
+  const handleUpdateSlide = (updatedSlide) => {
+    const updatedSlides = tempSlides.map(s =>
+      s.id === updatedSlide.id ? updatedSlide : s
+    );
+    setTempSlides(updatedSlides);
+    setEditingSlide(null);
+  };
+
+  const handleAddSlide = () => {
+    if (newSlide.imageUrl && newSlide.title) {
+      const slideToAdd = {
+        ...newSlide,
+        id: `slide-${Date.now()}`,
+      };
+      const updatedSlides = [...tempSlides, slideToAdd];
+      setTempSlides(updatedSlides);
+      setNewSlide({
+        imageUrl: '',
+        title: '',
+        subtitle: '',
+        ctaPrimaryText: '',
+        ctaPrimaryLink: '',
+        ctaSecondaryText: '',
+        ctaSecondaryLink: '',
+        overlayOpacity: 0.6
+      });
+    }
+  };
+
+  const handleDeleteSlide = (id) => {
+    const updatedSlides = tempSlides.filter(s => s.id !== id);
+    setTempSlides(updatedSlides);
+    onUpdate('heroSlides', updatedSlides, 'delete');
+    if (currentSlideIndex >= updatedSlides.length) {
+      setCurrentSlideIndex(Math.max(0, updatedSlides.length - 1));
+    }
+  };
+
+  // Handle file upload for editing slide
+  const handleFileUpload = async (file, slideId = null) => {
+    if (!storage || !file) return;
+
+    const statusKey = slideId || 'new';
+    const isNewSlide = !slideId;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      if (isNewSlide) {
+        setNewSlideUploadStatus({ status: 'error', message: 'Please upload an image file' });
+      } else {
+        setUploadStatus({ ...uploadStatus, [statusKey]: { status: 'error', message: 'Please upload an image file' } });
+      }
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      if (isNewSlide) {
+        setNewSlideUploadStatus({ status: 'error', message: 'File size must be less than 10MB' });
+      } else {
+        setUploadStatus({ ...uploadStatus, [statusKey]: { status: 'error', message: 'File size must be less than 10MB' } });
+      }
+      return;
+    }
+
+    // Set uploading status (checking for duplicates first)
+    if (isNewSlide) {
+      setNewSlideUploadStatus({ status: 'uploading', message: 'Checking for duplicates...' });
+    } else {
+      setUploadStatus({ ...uploadStatus, [statusKey]: { status: 'uploading', message: 'Checking for duplicates...' } });
+    }
+
+    try {
+      // Calculate file hash to check for duplicates
+      console.log('Starting duplicate check for file:', file.name, 'Size:', file.size);
+      const fileHash = await calculateFileHash(file);
+      console.log('Hash calculated:', fileHash.substring(0, 32) + '...');
+      
+      // Check if file already exists in Storage
+      const existingUrl = await checkDuplicateFile(fileHash);
+      console.log('Duplicate check result:', existingUrl ? 'DUPLICATE FOUND' : 'NO DUPLICATE');
+      
+      if (existingUrl) {
+        // Duplicate found - use existing URL
+        if (isNewSlide) {
+          setNewSlideUploadStatus({ status: 'success', message: 'File already exists, reusing existing URL!' });
+        } else {
+          setUploadStatus({ ...uploadStatus, [statusKey]: { status: 'success', message: 'File already exists, reusing existing URL!' } });
+        }
+        
+        // Use existing URL
+        const downloadURL = existingUrl;
+        
+        // Update the slide's imageUrl with existing URL
+        if (isNewSlide) {
+          setNewSlide({ ...newSlide, imageUrl: downloadURL });
+        } else {
+          const updatedEditingSlide = { ...editingSlide, imageUrl: downloadURL };
+          setEditingSlide(updatedEditingSlide);
+          setTempSlides(prevSlides => 
+            prevSlides.map(s =>
+              s.id === slideId ? updatedEditingSlide : s
+            )
+          );
+        }
+
+        // Clear status after 3 seconds
+        setTimeout(() => {
+          if (isNewSlide) {
+            setNewSlideUploadStatus(null);
+          } else {
+            setUploadStatus({ ...uploadStatus, [statusKey]: null });
+          }
+        }, 3000);
+        return; // Exit early since we're using existing file
+      }
+
+      // No duplicate found - proceed with upload
+      if (isNewSlide) {
+        setNewSlideUploadStatus({ status: 'uploading', message: 'Uploading...' });
+      } else {
+        setUploadStatus({ ...uploadStatus, [statusKey]: { status: 'uploading', message: 'Uploading...' } });
+      }
+
+      // Create a unique filename
+      const timestamp = Date.now();
+      const fileName = `hero-slide-${timestamp}-${file.name}`;
+      const storageRef = ref(storage, `carousel/${fileName}`);
+
+      // Upload file
+      await uploadBytes(storageRef, file);
+
+      // Get download URL
+      const downloadURL = await getDownloadURL(storageRef);
+
+      // Store file hash for future duplicate detection
+      console.log('About to store hash after upload:', fileHash.substring(0, 16) + '...');
+      await storeFileHash(fileHash, downloadURL, fileName);
+      console.log('Hash storage completed');
+
+      // Update the slide's imageUrl
+      if (isNewSlide) {
+        setNewSlide({ ...newSlide, imageUrl: downloadURL });
+        setNewSlideUploadStatus({ status: 'success', message: 'Upload successful!' });
+      } else {
+        // Update both editingSlide and tempSlides immediately
+        const updatedEditingSlide = { ...editingSlide, imageUrl: downloadURL };
+        setEditingSlide(updatedEditingSlide);
+        
+        // Also update tempSlides using functional update to ensure we have latest state
+        // This ensures the URL is saved when user clicks "Save All Changes"
+        setTempSlides(prevSlides => 
+          prevSlides.map(s =>
+            s.id === slideId ? updatedEditingSlide : s
+          )
+        );
+        
+        setUploadStatus({ ...uploadStatus, [statusKey]: { status: 'success', message: 'Upload successful!' } });
+      }
+
+      // Clear status after 3 seconds
+      setTimeout(() => {
+        if (isNewSlide) {
+          setNewSlideUploadStatus(null);
+        } else {
+          setUploadStatus({ ...uploadStatus, [statusKey]: null });
+        }
+      }, 3000);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      if (isNewSlide) {
+        setNewSlideUploadStatus({ status: 'error', message: 'Upload failed. Please try again.' });
+      } else {
+        setUploadStatus({ ...uploadStatus, [statusKey]: { status: 'error', message: 'Upload failed. Please try again.' } });
+      }
+    }
+  };
+
+  // Show edit mode UI
+  if (isEditing) {
+    return (
+      <HeroSectionContainer
+        id="home"
+        backgroundImage={slides.length > 0 && slides[currentSlideIndex]?.imageUrl
+          ? slides[currentSlideIndex].imageUrl
+          : `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`}
+      >
+        <Overlay overlayOpacity={slides[currentSlideIndex]?.overlayOpacity ?? 0.6} />
+        <EditModeContainer>
+          <EditFormContainer>
+            <EditFormTitle>Edit Hero Slides</EditFormTitle>
+            
+            {tempSlides.map((slide, index) => (
+              <SlideEditorCard key={slide.id || index}>
+                <SlideEditorTitle>Slide {index + 1}</SlideEditorTitle>
+                {editingSlide?.id === slide.id ? (
+                  <FormSpace>
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Upload Image
+                    </label>
+                    <FileUploadContainer>
+                      <FileInput
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleFileUpload(file, editingSlide.id);
+                          }
+                        }}
+                      />
+                      {uploadStatus[editingSlide.id] && (
+                        <UploadStatus status={uploadStatus[editingSlide.id].status}>
+                          {uploadStatus[editingSlide.id].status === 'uploading' && '⏳'}
+                          {uploadStatus[editingSlide.id].status === 'success' && '✓'}
+                          {uploadStatus[editingSlide.id].status === 'error' && '✗'}
+                          {uploadStatus[editingSlide.id].message}
+                        </UploadStatus>
+                      )}
+                      {editingSlide.imageUrl && (
+                        <ImagePreview>
+                          <img src={editingSlide.imageUrl} alt="Preview" />
+                        </ImagePreview>
+                      )}
+                    </FileUploadContainer>
+                    <OrDivider>OR</OrDivider>
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Image URL (Alternative)
+                    </label>
+                    <Input
+                      type="text"
+                      value={editingSlide.imageUrl || ''}
+                      onChange={(e) => setEditingSlide({ ...editingSlide, imageUrl: e.target.value })}
+                      placeholder="Paste image URL here"
+                    />
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Title
+                    </label>
+                    <Input
+                      type="text"
+                      value={editingSlide.title || ''}
+                      onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })}
+                      placeholder="Slide Title"
+                    />
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Subtitle
+                    </label>
+                    <TextArea
+                      value={editingSlide.subtitle || ''}
+                      onChange={(e) => setEditingSlide({ ...editingSlide, subtitle: e.target.value })}
+                      placeholder="Slide Subtitle"
+                      rows="2"
+                    />
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Primary CTA Text
+                    </label>
+                    <Input
+                      type="text"
+                      value={editingSlide.ctaPrimaryText || ''}
+                      onChange={(e) => setEditingSlide({ ...editingSlide, ctaPrimaryText: e.target.value })}
+                      placeholder="e.g., Join Us This Sunday"
+                    />
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Primary CTA Link
+                    </label>
+                    <Input
+                      type="text"
+                      value={editingSlide.ctaPrimaryLink || ''}
+                      onChange={(e) => setEditingSlide({ ...editingSlide, ctaPrimaryLink: e.target.value })}
+                      placeholder="e.g., #services"
+                    />
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Secondary CTA Text
+                    </label>
+                    <Input
+                      type="text"
+                      value={editingSlide.ctaSecondaryText || ''}
+                      onChange={(e) => setEditingSlide({ ...editingSlide, ctaSecondaryText: e.target.value })}
+                      placeholder="e.g., Learn More"
+                    />
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Secondary CTA Link
+                    </label>
+                    <Input
+                      type="text"
+                      value={editingSlide.ctaSecondaryLink || ''}
+                      onChange={(e) => setEditingSlide({ ...editingSlide, ctaSecondaryLink: e.target.value })}
+                      placeholder="e.g., #about"
+                    />
+                    <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                      Overlay Opacity (0-1)
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={editingSlide.overlayOpacity ?? 0.6}
+                      onChange={(e) => setEditingSlide({ ...editingSlide, overlayOpacity: parseFloat(e.target.value) })}
+                      placeholder="0.6"
+                    />
+                    <AdminButtonsContainer>
+                      <Button onClick={() => {
+                        // Update tempSlides first
+                        const updatedSlides = tempSlides.map(s =>
+                          s.id === editingSlide.id ? editingSlide : s
+                        );
+                        setTempSlides(updatedSlides);
+                        // Close edit mode
+                        setEditingSlide(null);
+                        // Save to Firestore immediately
+                        onUpdate('heroSlides', updatedSlides);
+                      }} className="bg-green-600 hover:bg-green-700 text-white">
+                        Save
+                      </Button>
+                      <Button onClick={() => setEditingSlide(null)} className="bg-gray-500 hover:bg-gray-600 text-white">
+                        Cancel
+                      </Button>
+                    </AdminButtonsContainer>
+                  </FormSpace>
+                ) : (
+                  <div>
+                    <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                      <strong>Title:</strong> {slide.title || 'No title'}
+                    </p>
+                    <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                      <strong>Image:</strong> {slide.imageUrl ? '✓ Set' : '✗ Missing'}
+                    </p>
+                    <AdminButtonsContainer>
+                      <Button onClick={() => setEditingSlide({ ...slide })} className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                        <Icon name="edit" className="mr-1" /> Edit
+                      </Button>
+                      <Button onClick={() => handleDeleteSlide(slide.id)} className="bg-red-500 hover:bg-red-600 text-white">
+                        <Icon name="trash2" className="mr-1" /> Delete
+                      </Button>
+                    </AdminButtonsContainer>
+                  </div>
+                )}
+              </SlideEditorCard>
+            ))}
+
+            {/* Add New Slide Form */}
+            <SlideEditorCard style={{ border: '2px dashed #9ca3af' }}>
+              <SlideEditorTitle>Add New Slide</SlideEditorTitle>
+              <FormSpace>
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                  Upload Image
+                </label>
+                <FileUploadContainer>
+                  <FileInput
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload(file, null); // null indicates new slide
+                      }
+                    }}
+                  />
+                  {newSlideUploadStatus && (
+                    <UploadStatus status={newSlideUploadStatus.status}>
+                      {newSlideUploadStatus.status === 'uploading' && '⏳'}
+                      {newSlideUploadStatus.status === 'success' && '✓'}
+                      {newSlideUploadStatus.status === 'error' && '✗'}
+                      {newSlideUploadStatus.message}
+                    </UploadStatus>
+                  )}
+                  {newSlide.imageUrl && (
+                    <ImagePreview>
+                      <img src={newSlide.imageUrl} alt="Preview" />
+                    </ImagePreview>
+                  )}
+                </FileUploadContainer>
+                <OrDivider>OR</OrDivider>
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                  Image URL (Alternative) *
+                </label>
+                <Input
+                  type="text"
+                  value={newSlide.imageUrl}
+                  onChange={(e) => setNewSlide({ ...newSlide, imageUrl: e.target.value })}
+                  placeholder="Paste image URL here (required)"
+                />
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                  Title *
+                </label>
+                <Input
+                  type="text"
+                  value={newSlide.title}
+                  onChange={(e) => setNewSlide({ ...newSlide, title: e.target.value })}
+                  placeholder="Slide Title (required)"
+                />
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                  Subtitle
+                </label>
+                <TextArea
+                  value={newSlide.subtitle}
+                  onChange={(e) => setNewSlide({ ...newSlide, subtitle: e.target.value })}
+                  placeholder="Slide Subtitle"
+                  rows="2"
+                />
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                  Primary CTA Text
+                </label>
+                <Input
+                  type="text"
+                  value={newSlide.ctaPrimaryText}
+                  onChange={(e) => setNewSlide({ ...newSlide, ctaPrimaryText: e.target.value })}
+                  placeholder="e.g., Join Us This Sunday"
+                />
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                  Primary CTA Link
+                </label>
+                <Input
+                  type="text"
+                  value={newSlide.ctaPrimaryLink}
+                  onChange={(e) => setNewSlide({ ...newSlide, ctaPrimaryLink: e.target.value })}
+                  placeholder="e.g., #services"
+                />
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                  Secondary CTA Text
+                </label>
+                <Input
+                  type="text"
+                  value={newSlide.ctaSecondaryText}
+                  onChange={(e) => setNewSlide({ ...newSlide, ctaSecondaryText: e.target.value })}
+                  placeholder="e.g., Learn More"
+                />
+                <label style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', display: 'block' }}>
+                  Secondary CTA Link
+                </label>
+                <Input
+                  type="text"
+                  value={newSlide.ctaSecondaryLink}
+                  onChange={(e) => setNewSlide({ ...newSlide, ctaSecondaryLink: e.target.value })}
+                  placeholder="e.g., #about"
+                />
+                <Button onClick={handleAddSlide} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Add Slide
+                </Button>
+              </FormSpace>
+            </SlideEditorCard>
+
+            <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <Button onClick={handleSaveSlides} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                Save All Changes
+              </Button>
+            </div>
+          </EditFormContainer>
+        </EditModeContainer>
+      </HeroSectionContainer>
+    );
+  }
 
   if (slides.length === 0) {
     return (
@@ -326,14 +1052,33 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
     }
   };
 
+  // Handle pause on hover
+  const handleMouseEnter = () => {
+    setIsCarouselPaused(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsCarouselPaused(false);
+  };
+
+  // Handle pause on manual navigation
+  const handleManualNavigate = (newIndex) => {
+    setIsCarouselPaused(true);
+    setCurrentSlideIndex(newIndex);
+    // Resume after 5 seconds of inactivity
+    setTimeout(() => {
+      setIsCarouselPaused(false);
+    }, 5000);
+  };
+
   return (
     <HeroSectionContainer
       id="home"
-      style={{
-        backgroundImage: `url(${currentSlide.imageUrl})`,
-      }}
+      backgroundImage={currentSlide.imageUrl}
       role="banner"
       aria-label="Hero section"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Overlay overlayOpacity={currentSlide.overlayOpacity ?? 0.6} />
       <ContentWrapper key={currentSlide.id}>
@@ -369,14 +1114,14 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
         <>
           <CarouselControl 
             className="left" 
-            onClick={() => setCurrentSlideIndex((prev) => (prev - 1 + slides.length) % slides.length)}
+            onClick={() => handleManualNavigate((currentSlideIndex - 1 + slides.length) % slides.length)}
             aria-label="Previous slide"
           >
             <Icon name="chevronLeft" size={24} />
           </CarouselControl>
           <CarouselControl 
             className="right" 
-            onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % slides.length)}
+            onClick={() => handleManualNavigate((currentSlideIndex + 1) % slides.length)}
             aria-label="Next slide"
           >
             <Icon name="chevronRight" size={24} />
@@ -387,7 +1132,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
               <Dot
                 key={index}
                 className={index === currentSlideIndex ? "active" : ""}
-                onClick={() => setCurrentSlideIndex(index)}
+                onClick={() => handleManualNavigate(index)}
                 aria-label={`Go to slide ${index + 1}`}
                 role="tab"
                 aria-selected={index === currentSlideIndex}
@@ -395,7 +1140,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    setCurrentSlideIndex(index);
+                    handleManualNavigate(index);
                   }
                 }}
               />
