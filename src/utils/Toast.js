@@ -63,13 +63,15 @@ const ToastMessage = styled.span`
 
 export const ToastNotification = ({ message, onClose, duration = 3000, type = 'success' }) => {
   useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, duration);
-      return () => clearTimeout(timer);
-    }
-  }, [message, duration, onClose]);
+    if (!message) return;
+
+    const timer = setTimeout(() => {
+      onClose();
+    }, duration);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message, duration]); // Removed onClose from dependencies to prevent timer reset
 
   if (!message) return null;
 

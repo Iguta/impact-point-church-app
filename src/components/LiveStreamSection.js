@@ -1,23 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
-import { PlayCircle, Wifi } from 'lucide-react'; // Import relevant icons
-import isEqual from 'lodash.isequal'
+import { PlayCircle, Wifi } from 'lucide-react';
+import isEqual from 'lodash.isequal';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const LiveStreamSectionContainer = styled(SectionContainer)`
-  background-color: #F8F9FA; /* Light gray background */
-  margin: 0 -2rem; /* Extend full width */
+  background-color: #f8f9fa;
+  max-width: none;
+  width: 100%;
+  margin: 0;
   text-align: center;
-  max-width:none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const ContentWrapper = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const LiveStreamContent = styled.div`
   max-width: 900px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem; /* Mobile-first */
   background: white;
-  border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  opacity: ${({ isVisible }) => (isVisible ? 1 : 0)};
+  transform: translateY(${({ isVisible }) => (isVisible ? 0 : '30px')});
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  text-align: center; /* Center all content inside */
+
+  @media (min-width: 640px) {
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const LiveIndicator = styled.div`
@@ -61,14 +85,32 @@ const VideoEmbedContainer = styled.div`
 `;
 
 const StreamTitle = styled.h3`
-  font-size: 2rem;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
+  font-size: 1.5rem; /* Mobile-first */
+  color: #1f2937;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center; /* Ensure title is centered */
+
+  @media (min-width: 640px) {
+    font-size: 1.75rem;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 2rem;
+  }
 `;
 
 const StreamDescription = styled.p`
-  color: #555;
+  color: #4b5563;
   margin-bottom: 1.5rem;
+  line-height: 1.6;
+  font-size: 0.9375rem;
+  text-align: center; /* Ensure description is centered */
+
+  @media (min-width: 640px) {
+    font-size: 1rem;
+  }
 `;
 
 const GoLiveButton = styled(Button)`
@@ -77,6 +119,8 @@ const GoLiveButton = styled(Button)`
   padding: 1rem 2rem;
   font-size: 1.2rem;
   box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+  margin: 0 auto; /* Center the button */
+  display: inline-flex; /* Keep inline-flex for icon alignment */
 
   &:hover {
     background: linear-gradient(45deg, #16A34A, #15803D);
@@ -129,10 +173,13 @@ const LiveStreamSection = ({ data, isEditing, onUpdate }) => {
     onUpdate('liveStream', tempStreamData);
   };
 
+  const [contentRef, isVisible] = useScrollAnimation({ threshold: 0.1 });
+
   return (
-    <LiveStreamSectionContainer id="livestream">
-      <SectionTitle>Live Stream</SectionTitle>
-      <LiveStreamContent>
+    <LiveStreamSectionContainer id="livestream" role="region" aria-labelledby="livestream-title">
+      <ContentWrapper ref={contentRef}>
+        <SectionTitle id="livestream-title">Live Stream</SectionTitle>
+        <LiveStreamContent isVisible={isVisible}>
         {isEditing ? (
           <AdminControls>
             <CheckboxContainer>
@@ -197,7 +244,8 @@ const LiveStreamSection = ({ data, isEditing, onUpdate }) => {
             )}
           </>
         )}
-      </LiveStreamContent>
+        </LiveStreamContent>
+      </ContentWrapper>
     </LiveStreamSectionContainer>
   );
 };

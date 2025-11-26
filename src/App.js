@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FirebaseProvider, useFirebase } from './context/FirebaseContext';
 import { initialChurchData } from './data/initialChurchData';
 import { Button} from './components/UtilityComponents';
@@ -17,7 +17,7 @@ import { ToastNotification } from './utils/Toast';
 import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import styled, { createGlobalStyle } from 'styled-components';
 
-// Global styles for body and animations
+// Global styles for body and animations - Mobile-first approach
 const GlobalStyle = createGlobalStyle`
   * {
     margin: 0;
@@ -25,44 +25,169 @@ const GlobalStyle = createGlobalStyle`
     box-sizing: border-box;
   }
 
-  body {
-    font-family: 'Arial', sans-serif; /* As per HTML */
-    line-height: 1.6;
-    color: #333; /* Default text color */
-    overflow-x: hidden;
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px; /* Base font size for mobile */
+    
+    @media (min-width: 768px) {
+      font-size: 17px;
+    }
+    
+    @media (min-width: 1024px) {
+      font-size: 18px;
+    }
   }
 
-  /* Custom animations from HTML */
+  body {
+    /* Modern, web-safe font stack with fallbacks */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    color: #1f2937; /* Modern dark gray instead of pure black */
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #ffffff;
+  }
+
+  /* Modern color palette variables */
+  :root {
+    --color-primary: #4f46e5;
+    --color-primary-dark: #4338ca;
+    --color-secondary: #667eea;
+    --color-accent: #764ba2;
+    --color-text: #1f2937;
+    --color-text-light: #6b7280;
+    --color-bg-light: #f9fafb;
+    --color-bg-white: #ffffff;
+    --color-success: #22c55e;
+    --color-error: #ef4444;
+    --color-warning: #f59e0b;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Custom animations */
   @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
+    0%, 100% { 
+      transform: translateY(0px); 
+    }
+    50% { 
+      transform: translateY(-10px); 
+    }
   }
 
   @keyframes slideInUp {
-      from {
-          opacity: 0;
-          transform: translateY(30px);
-      }
-      to {
-          opacity: 1;
-          transform: translateY(0);
-      }
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInFromRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   /* Fade in animation for sections */
   .fade-in {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.8s ease;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
   }
 
   .fade-in.visible {
-      opacity: 1;
-      transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
   }
 
-  html {
-      scroll-behavior: smooth; /* Smooth scrolling */
+  /* Smooth transitions for interactive elements */
+  a, button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Skip to content link for accessibility */
+  .skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--color-primary);
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    z-index: 10000;
+    
+    &:focus {
+      top: 0;
+    }
+  }
+
+  /* Image optimization */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Loading state animation */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .loading {
+    animation: spin 1s linear infinite;
   }
 `;
 
@@ -92,6 +217,12 @@ const App = () => {
   const [currentPath, setCurrentPath] = useState(
     typeof window !== 'undefined' ? window.location.pathname : '/'
   );
+
+  // Memoize the toast close handler to prevent unnecessary re-renders
+  const handleToastClose = useCallback(() => {
+    setToastMessage('');
+    setToastType('success');
+  }, []);
 
   // Minimal client-side routing for /login without react-router
   useEffect(() => {
@@ -242,15 +373,16 @@ const App = () => {
   return (
     <AppContainer>
       <GlobalStyle /> {/* Apply global styles */}
+      {/* Skip to content link for accessibility */}
+      <a href="#home" className="skip-to-content" tabIndex="0">
+        Skip to main content
+      </a>
       <Header />
       {/* Toast Notification */}
       <ToastNotification 
         message={toastMessage} 
         type={toastType}
-        onClose={() => {
-          setToastMessage('');
-          setToastType('success');
-        }} 
+        onClose={handleToastClose} 
       />
       {/* Admin Toggle - Only visible to admins */}
       {isAdmin && (
@@ -265,14 +397,16 @@ const App = () => {
       )}
 
       {/* Website Sections */}
-      <HeroSection data={churchData.heroSlides} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <AboutSection data={churchData.about} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <LiveStreamSection data={churchData.liveStream} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <ServicesSection data={churchData.services} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <SermonsSection data={churchData.sermons} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <MinistriesSection data={churchData.ministries} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <EventsSection data={churchData.events} isEditing={isEditing} onUpdate={handleUpdateSection} />
-      <ContactSection data={churchData.contact} isEditing={isEditing} onUpdate={handleUpdateSection} />
+      <main role="main" id="main-content">
+        <HeroSection data={churchData.heroSlides} isEditing={isEditing} onUpdate={handleUpdateSection} />
+        <AboutSection data={churchData.about} isEditing={isEditing} onUpdate={handleUpdateSection} />
+        <LiveStreamSection data={churchData.liveStream} isEditing={isEditing} onUpdate={handleUpdateSection} />
+        <ServicesSection data={churchData.services} isEditing={isEditing} onUpdate={handleUpdateSection} />
+        <SermonsSection data={churchData.sermons} isEditing={isEditing} onUpdate={handleUpdateSection} />
+        <MinistriesSection data={churchData.ministries} isEditing={isEditing} onUpdate={handleUpdateSection} />
+        <EventsSection data={churchData.events} isEditing={isEditing} onUpdate={handleUpdateSection} />
+        <ContactSection data={churchData.contact} isEditing={isEditing} onUpdate={handleUpdateSection} />
+      </main>
       <FooterSection />
     </AppContainer>
   );

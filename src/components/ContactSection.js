@@ -2,17 +2,76 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
 import { MapPin, Calendar, Mail, Phone } from 'lucide-react';
-import isEqual from 'lodash.isequal'
+import isEqual from 'lodash.isequal';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
+
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useFirebase } from '../context/FirebaseContext';
+
 
 // Reusing SectionContainer and SectionTitle from UtilityComponents
 const ContactGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 3rem; /* gap-8 */
+  grid-template-columns: 1fr; /* Mobile: single column */
+  gap: 2rem;
   margin-top: 3rem;
-  max-width: 100%; /* Ensure it fits within SectionContainer */
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem;
+  }
+`;
+
+const MapContainer = styled.div`
+  grid-column: 1 / -1; /* Span full width on all screen sizes */
+  margin-top: 2rem;
+  opacity: ${({ isVisible }) => (isVisible ? 1 : 0)};
+  transform: translateY(${({ isVisible }) => (isVisible ? 0 : '30px')});
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  
+  @media (min-width: 768px) {
+    margin-top: 1rem;
+  }
+`;
+
+const MapWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #f3f4f6;
+
+  @media (min-width: 640px) {
+    border-radius: 15px;
+  }
+
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+`;
+
+const MapTitle = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  text-align: center;
+
+  @media (min-width: 640px) {
+    font-size: 1.5rem;
+    text-align: left;
+  }
 `;
 
 const ContactInfoCard = styled.div`
@@ -59,6 +118,7 @@ const Form = styled.form`
 `;
 
 const ContactSection = ({ data, isEditing, onUpdate }) => {
+  const {db} = useFirebase();
   const [tempContact, setTempContact] = useState(data);
   const [formData, setFormData] = useState({
     name: '',
@@ -66,11 +126,11 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
     subject: '',
     message: '',
   });
+  const [mapRef, isMapVisible] = useScrollAnimation({ threshold: 0.1 });
 
   useEffect(() => {
     if(!isEditing && !isEqual(data, tempContact)){
         setTempContact(data);
-        console.log(tempContact)
     }
   }, [data, tempContact, isEditing]);
 
@@ -83,12 +143,39 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form Submitted:", formData);
-    alert("Thank you for your message! We'll get back to you soon."); // As per HTML
-    setFormData({ name: '', email: '', subject: '', message: '' }); // Clear form
-  };
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!db) {
+    alert("Database not ready. Please try again.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "contactMessages"), {
+      name: formData.name,
+      email: formData.email,
+      subject: formData.subject,
+      message: formData.message,
+      createdAt: serverTimestamp(),
+    });
+
+    alert("Thank you for your message! We'll get back to you soon.");
+
+    // Reset form
+    setFormData({
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    });
+
+  } catch (error) {
+    console.error("Error sending message:", error);
+    alert("There was an issue sending your message. Please try again.");
+  }
+};
+
 
   return (
     <SectionContainer id="contact">
@@ -134,6 +221,21 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
                   placeholder="Office Hours"
                   rows="3"
                 />
+              </div>
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ color: '#E0E7FF', marginBottom: '0.5rem', display: 'block', fontSize: '0.875rem' }}>
+                  Map Embed URL (Google Maps)
+                </label>
+                <Input
+                  type="text"
+                  value={tempContact.mapEmbedUrl || ''}
+                  onChange={(e) => setTempContact({ ...tempContact, mapEmbedUrl: e.target.value })}
+                  placeholder="https://www.google.com/maps/embed?pb=..."
+                  style={{ color: '#1f2937' }}
+                />
+                <p style={{ fontSize: '0.75rem', color: '#E0E7FF', marginTop: '0.25rem' }}>
+                  Get embed URL: Google Maps → Share → Embed a map
+                </p>
               </div>
               <Button onClick={handleSaveContact} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Contact Info</Button>
             </FormSpace>
@@ -197,6 +299,53 @@ const ContactSection = ({ data, isEditing, onUpdate }) => {
           </Form>
         </ContactFormCard>
       </ContactGrid>
+      
+      {/* Map Section */}
+      {data?.mapEmbedUrl && (
+        <MapContainer ref={mapRef} isVisible={isMapVisible}>
+          <MapTitle>Find Us</MapTitle>
+          {isEditing ? (
+            <FormSpace>
+              <Input
+                type="text"
+                placeholder="Google Maps Embed URL"
+                value={tempContact.mapEmbedUrl || ''}
+                onChange={(e) => setTempContact({ ...tempContact, mapEmbedUrl: e.target.value })}
+              />
+              <Button onClick={handleSaveContact} className="bg-indigo-600">Save Map</Button>
+            </FormSpace>
+          ) : (
+            <MapWrapper>
+              <iframe
+                src={data.mapEmbedUrl}
+                title="Church Location Map"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </MapWrapper>
+          )}
+        </MapContainer>
+      )}
+      
+      {/* Show map input in edit mode even if no map exists */}
+      {isEditing && !data?.mapEmbedUrl && (
+        <MapContainer>
+          <MapTitle>Add Map for Directions</MapTitle>
+          <FormSpace>
+            <Input
+              type="text"
+              placeholder="Paste Google Maps Embed URL here"
+              value={tempContact.mapEmbedUrl || ''}
+              onChange={(e) => setTempContact({ ...tempContact, mapEmbedUrl: e.target.value })}
+            />
+            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '-0.5rem' }}>
+              To get the embed URL: Go to Google Maps → Search for your location → Click "Share" → Choose "Embed a map" → Copy the iframe src URL
+            </p>
+            <Button onClick={handleSaveContact} className="bg-indigo-600">Save Map</Button>
+          </FormSpace>
+        </MapContainer>
+      )}
     </SectionContainer>
   );
 };

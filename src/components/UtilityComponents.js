@@ -28,36 +28,78 @@ const YouTubeIconSVG = ({ size = 24, className = '' }) => (
   </svg>
 );
 
-// Styled Button component
+// Styled Button component - Mobile-first
 const StyledButton = styled.button`
-  padding: 1rem 2rem; /* btn padding */
+  padding: 0.875rem 1.5rem; /* Mobile padding */
   border: none;
-  border-radius: 30px; /* btn border-radius */
-  font-size: 1.1rem; /* btn font-size */
-  font-weight: bold; /* btn font-weight */
+  border-radius: 8px; /* Modern, subtle radius */
+  font-size: 1rem; /* Mobile font size */
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
-  display: inline-block; /* btn display */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px; /* Touch target size */
+  min-width: 44px;
+  line-height: 1.5;
+
+  @media (min-width: 640px) {
+    padding: 1rem 2rem;
+    font-size: 1.0625rem;
+    border-radius: 12px;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 1rem 2.5rem;
+    font-size: 1.125rem;
+  }
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
   }
 
   /* Primary Button Style */
   &.btn-primary {
-    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
     color: white;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+
+    &:hover {
+      background: linear-gradient(135deg, #4338ca, #6d28d9);
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+    }
   }
 
   /* Secondary Button Style */
   &.btn-secondary {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
-    border: 2px solid white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
   }
 
   /* Admin Toggle Button specific styles */
@@ -145,50 +187,93 @@ export const Icon = ({ name, className = '', size = 24 }) => {
   return icons[name] || null;
 };
 
-// Common styled components for inputs and textareas
+// Common styled components for inputs and textareas - Mobile-first
 export const Input = styled.input`
-  padding: 0.5rem;
-  border: 2px solid #e0e0e0; /* from HTML form-group */
-  border-radius: 10px; /* from HTML form-group */
+  padding: 0.75rem 1rem; /* Mobile padding */
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
-  color: #333; /* Default text color */
+  color: #1f2937;
   background-color: white;
+  min-height: 44px; /* Touch target */
+
+  @media (min-width: 640px) {
+    padding: 0.875rem 1.125rem;
+    border-radius: 10px;
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
 
   &:focus {
     outline: none;
-    border-color: #3498db; /* Blue from HTML */
-    box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
   }
 
-  .dark & { /* Basic dark mode support if needed */
-    background-color: #1F2937;
+  &:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .dark & {
+    background-color: #1f2937;
     color: white;
-    border-color: #4B5563;
+    border-color: #4b5563;
+
+    &::placeholder {
+      color: #6b7280;
+    }
   }
 `;
 
 export const TextArea = styled.textarea`
-  padding: 0.5rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
-  color: #333;
+  color: #1f2937;
   background-color: white;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+  line-height: 1.5;
+
+  @media (min-width: 640px) {
+    padding: 0.875rem 1.125rem;
+    border-radius: 10px;
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
 
   &:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
   }
 
-  .dark & { /* Basic dark mode support if needed */
-    background-color: #1F2937;
+  &:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .dark & {
+    background-color: #1f2937;
     color: white;
-    border-color: #4B5563;
+    border-color: #4b5563;
+
+    &::placeholder {
+      color: #6b7280;
+    }
   }
 `;
 
@@ -199,26 +284,57 @@ export const FormSpace = styled.div`
 `;
 
 export const SectionContainer = styled.section`
-  padding: 5rem 2rem; /* py-16 */
+  padding: 3rem 1rem; /* Mobile-first: smaller padding */
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
+
+  @media (min-width: 640px) {
+    padding: 4rem 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 5rem 2rem;
+  }
 `;
 
 export const SectionTitle = styled.h2`
   text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 3rem;
-  color: #2c3e50; /* Dark blue-gray from HTML */
+  font-size: 1.875rem; /* Mobile-first: 30px */
+  line-height: 1.2;
+  margin-bottom: 2rem; /* Mobile spacing */
+  color: #1f2937;
   position: relative;
+  font-weight: 700;
+
+  @media (min-width: 640px) {
+    font-size: 2.25rem; /* 36px */
+    margin-bottom: 2.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 2.5rem; /* 40px */
+    margin-bottom: 3rem;
+  }
 
   &::after {
     content: '';
     display: block;
-    width: 100px;
-    height: 4px;
-    background: linear-gradient(45deg, #3498db, #9b59b6); /* Blue to purple gradient */
-    margin: 1rem auto;
+    width: 60px; /* Mobile size */
+    height: 3px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    margin: 1rem auto 0;
     border-radius: 2px;
+
+    @media (min-width: 640px) {
+      width: 80px;
+      height: 4px;
+    }
+
+    @media (min-width: 1024px) {
+      width: 100px;
+      margin: 1.25rem auto 0;
+    }
   }
 `;
 

@@ -1,122 +1,152 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Button, Icon } from './UtilityComponents';
-
-const SectionContainer = styled.section`
-  padding: 4rem 0; /* py-16 */
-  background-color: white;
-
-  .dark & {
-    background-color: #1F2937; /* gray-900 */
-    justify-content:center;
-  }
-`;
+import { Button, Icon, SectionContainer, SectionTitle } from './UtilityComponents';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const ContentWrapper = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem; /* px-4 */
-`;
+  padding: 0 1rem;
 
-const SectionTitle = styled.h2`
-  font-size: 2.25rem; /* text-4xl */
-  font-weight: 700; /* font-bold */
-  color: #1F2937; /* gray-900 */
-  margin-bottom: 2rem; /* mb-8 */
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @media (min-width: 640px) {
+    padding: 0 1.5rem;
+  }
 
-  .dark & {
-    color: white;
+  @media (min-width: 1024px) {
+    padding: 0 2rem;
   }
 `;
 
 const SermonsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-  gap: 2rem;
+  grid-template-columns: 1fr; /* Mobile: single column */
+  gap: 1.5rem;
 
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr); /* md:grid-cols-2 */
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
   }
 
   @media (min-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr); /* lg:grid-cols-3 */
+    grid-template-columns: repeat(3, 1fr);
   }
 `;
 
-const SermonCard = styled.div`
-  background-color: #F9FAFB; /* gray-50 */
-  padding: 1.5rem; /* p-6 */
-  border-radius: 0.5rem; /* rounded-lg */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+const SermonCard = styled.article`
+  background-color: #ffffff;
+  padding: 1.25rem; /* Mobile padding */
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e5e7eb;
+  opacity: ${({ isVisible }) => (isVisible ? 1 : 0)};
+  transform: translateY(${({ isVisible }) => (isVisible ? 0 : '20px')});
+  animation: ${({ isVisible, index }) => 
+    isVisible ? `fadeInUp 0.6s ease-out ${index * 0.1}s both` : 'none'};
 
-  .dark & {
-    background-color: #1F2937; /* gray-800 */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (min-width: 640px) {
+    padding: 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      border-color: #d1d5db;
+    }
   }
 `;
 
 const CardTitle = styled.h3`
-  font-size: 1.5rem; /* text-2xl */
-  font-weight: 600; /* font-semibold */
-  color: #1F2937; /* gray-900 */
-  margin-bottom: 0.5rem; /* mb-2 */
+  font-size: 1.25rem; /* Mobile-first */
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
 
-  .dark & {
-    color: white;
+  @media (min-width: 640px) {
+    font-size: 1.375rem;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 1.5rem;
   }
 `;
 
 const CardDetail = styled.p`
-  color: #374151; /* gray-700 */
-  font-size: 0.875rem; /* text-sm */
-  margin-bottom: 0.25rem; /* mb-1 */
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
 
   strong {
     font-weight: 600;
+    color: #374151;
   }
 
-  .dark & {
-    color: #D1D5DB; /* gray-300 */
+  @media (min-width: 640px) {
+    font-size: 0.9375rem;
   }
 `;
 
 const CardDescription = styled.p`
-  color: #374151; /* gray-700 */
-  margin-bottom: 1rem; /* mb-4 */
+  color: #4b5563;
+  margin-bottom: 1rem;
   flex-grow: 1;
+  line-height: 1.6;
+  font-size: 0.9375rem;
 
-  .dark & {
-    color: #D1D5DB; /* gray-300 */
+  @media (min-width: 640px) {
+    font-size: 1rem;
   }
 `;
 
 const LinksContainer = styled.div`
   display: flex;
   justify-content: flex-start;
-  gap: 1rem; /* space-x-4 */
+  gap: 1rem;
   margin-top: auto;
+  flex-wrap: wrap;
 
   a {
-    color: #4F46E5; /* indigo-600 */
+    color: #4f46e5;
     text-decoration: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    transition: color 0.2s ease-in-out;
+    gap: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    padding: 0.5rem 0;
+    transition: all 0.2s ease;
+    border-radius: 4px;
 
-    &:hover {
-      color: #3730A3; /* indigo-800 */
+    &:hover,
+    &:focus {
+      color: #4338ca;
+      transform: translateX(2px);
     }
 
-    .dark & {
-      color: #818CF8; /* indigo-400 */
-      &:hover {
-        color: #A5B4FC; /* indigo-300 */
-      }
+    &:focus-visible {
+      outline: 2px solid #4f46e5;
+      outline-offset: 2px;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
     }
   }
 `;
@@ -211,14 +241,19 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
 
   // Sort sermons by date in descending order
   const sortedSermons = [...tempSermons].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const [sectionRef, isSectionVisible] = useScrollAnimation({ threshold: 0.1 });
 
   return (
-    <SectionContainer id="sermons">
-      <ContentWrapper>
-        <SectionTitle>Latest Sermons</SectionTitle>
+    <SectionContainer id="sermons" role="region" aria-labelledby="sermons-title">
+      <ContentWrapper ref={sectionRef}>
+        <SectionTitle id="sermons-title">Latest Sermons</SectionTitle>
         <SermonsGrid>
-          {sortedSermons.map((sermon) => (
-            <SermonCard key={sermon.id}>
+          {sortedSermons.map((sermon, index) => (
+            <SermonCard 
+              key={sermon.id} 
+              isVisible={isSectionVisible}
+              index={index}
+            >
               {isEditing && editingSermon?.id === sermon.id ? (
                 // Edit form for sermon
                 <FormSpace>
@@ -272,8 +307,9 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
                         href={sermon.videoLink}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`Watch sermon: ${sermon.title}`}
                       >
-                        <Icon name="externalLink" className="mr-1" /> Watch
+                        <Icon name="externalLink" size={18} /> Watch
                       </a>
                     )}
                     {sermon.audioLink && (
@@ -281,8 +317,9 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
                         href={sermon.audioLink}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`Listen to sermon: ${sermon.title}`}
                       >
-                        <Icon name="externalLink" className="mr-1" /> Listen
+                        <Icon name="externalLink" size={18} /> Listen
                       </a>
                     )}
                   </LinksContainer>

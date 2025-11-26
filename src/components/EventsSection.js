@@ -1,48 +1,118 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Icon, Input, TextArea, FormSpace, SectionContainer, SectionTitle } from './UtilityComponents';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const EventsSectionContainer = styled(SectionContainer)`
-  background: #f8f9fa; /* from HTML */
-  margin: 0 -2rem; /* Extend full width */
-  max-width:none;
+  background: #f8f9fa;
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const ContentWrapper = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const EventsList = styled.div`
   max-width: 800px;
   margin: 0 auto;
+  padding: 0 1rem;
+  width: 100%;
+
+  @media (min-width: 640px) {
+    padding: 0;
+  }
 `;
 
-const EventItem = styled.div`
+const EventItem = styled.article`
   background: white;
-  padding: 2rem;
+  padding: 1.5rem; /* Mobile-first */
   margin-bottom: 1.5rem;
-  border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-  border-left: 5px solid #3498db; /* Blue border from HTML */
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #4f46e5;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: ${({ isVisible }) => (isVisible ? 1 : 0)};
+  transform: translateY(${({ isVisible }) => (isVisible ? 0 : '20px')});
+  animation: ${({ isVisible, index }) => 
+    isVisible ? `fadeInUp 0.6s ease-out ${index * 0.1}s both` : 'none'};
 
-  &:hover {
-    transform: translateX(10px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (min-width: 640px) {
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-left-width: 5px;
+  }
+
+  @media (min-width: 1024px) {
+    &:hover {
+      transform: translateX(8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
   }
 `;
 
 const EventDate = styled.div`
-  color: #3498db; /* Blue from HTML */
-  font-weight: bold;
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 0.9375rem; /* Mobile-first */
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  @media (min-width: 640px) {
+    font-size: 1rem;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 1.0625rem;
+  }
 `;
 
 const EventTitle = styled.h3`
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-  color: #333;
+  font-size: 1.25rem; /* Mobile-first */
+  margin-bottom: 0.75rem;
+  color: #1f2937;
+  font-weight: 700;
+  line-height: 1.3;
+
+  @media (min-width: 640px) {
+    font-size: 1.375rem;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const EventDescription = styled.p`
-  color: #555; /* from HTML */
+  color: #4b5563;
+  line-height: 1.6;
+  font-size: 0.9375rem; /* Mobile-first */
+
+  @media (min-width: 640px) {
+    font-size: 1rem;
+  }
 `;
 
 const AdminButtonsContainer = styled.div`
@@ -99,13 +169,19 @@ const EventsSection = ({ data, isEditing, onUpdate }) => {
 
   // Sort events by date (assuming date is sortable, like YYYY-MM-DD or full date string)
   const sortedEvents = [...tempEvents].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const [sectionRef, isSectionVisible] = useScrollAnimation({ threshold: 0.1 });
 
   return (
-    <EventsSectionContainer id="events">
-      <SectionTitle >Upcoming Events</SectionTitle>
-      <EventsList>
-        {sortedEvents.map((event) => (
-          <EventItem key={event.id}> {/* Apply fade-in class */}
+    <EventsSectionContainer id="events" role="region" aria-labelledby="events-title">
+      <ContentWrapper ref={sectionRef}>
+        <SectionTitle id="events-title">Upcoming Events</SectionTitle>
+        <EventsList>
+          {sortedEvents.map((event, index) => (
+            <EventItem 
+              key={event.id}
+              isVisible={isSectionVisible}
+              index={index}
+            >
             {isEditing && editingEvent?.id === event.id ? (
               <FormSpace>
                 <Input
@@ -199,7 +275,8 @@ const EventsSection = ({ data, isEditing, onUpdate }) => {
             </FormSpace>
           </EventItem>
         )}
-      </EventsList>
+        </EventsList>
+      </ContentWrapper>
     </EventsSectionContainer>
   );
 };
