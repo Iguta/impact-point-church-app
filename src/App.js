@@ -224,6 +224,12 @@ const App = () => {
     setToastType('success');
   }, []);
 
+  // Function to show toast notifications from child components
+  const showToast = useCallback((message, type = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+  }, []);
+
   // Minimal client-side routing for /login without react-router
   useEffect(() => {
     const onPopState = () => setCurrentPath(window.location.pathname);
@@ -405,7 +411,7 @@ const App = () => {
         <SermonsSection data={churchData.sermons} isEditing={isEditing} onUpdate={handleUpdateSection} />
         <MinistriesSection data={churchData.ministries} isEditing={isEditing} onUpdate={handleUpdateSection} />
         <EventsSection data={churchData.events} isEditing={isEditing} onUpdate={handleUpdateSection} />
-        <ContactSection data={churchData.contact} isEditing={isEditing} onUpdate={handleUpdateSection} />
+        <ContactSection data={churchData.contact} isEditing={isEditing} onUpdate={handleUpdateSection} onShowToast={showToast} />
       </main>
       <FooterSection />
     </AppContainer>
