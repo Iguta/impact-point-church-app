@@ -783,7 +783,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
                       )}
                       {editingSlide.imageUrl && (
                         <ImagePreview>
-                          <img src={editingSlide.imageUrl} alt="Preview" />
+                          <img src={editingSlide.imageUrl} alt="Hero slide preview" />
                         </ImagePreview>
                       )}
                     </FileUploadContainer>
@@ -931,7 +931,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
                   )}
                   {newSlide.imageUrl && (
                     <ImagePreview>
-                      <img src={newSlide.imageUrl} alt="Preview" />
+                      <img src={newSlide.imageUrl} alt="New hero slide preview" />
                     </ImagePreview>
                   )}
                 </FileUploadContainer>

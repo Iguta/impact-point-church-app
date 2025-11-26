@@ -467,7 +467,7 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
               )}
               {tempData?.imageUrl && (
                 <ImagePreview>
-                  <img src={tempData.imageUrl} alt="Preview" />
+                  <img src={tempData.imageUrl} alt="About section image preview" />
                 </ImagePreview>
               )}
             </FileUploadContainer>

@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Impact Point Church",
+  "name": "Impact Point Church - Where Faith Meets Purpose",
+  "description": "Join Impact Point Church in Indianapolis, IN for inspiring worship services, engaging sermons, community events, and meaningful ministries.",
   "icons": [
     {
       "src": "assets/favicon.ico",
@@ -10,16 +11,24 @@
     {
       "src": "assets/logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "assets/logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": ["religion", "lifestyle", "community"],
+  "screenshots": []
 }

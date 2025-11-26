@@ -1,3 +1,10 @@
+# robots.txt for Impact Point Church
 # https://www.robotstxt.org/robotstxt.html
+
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /login
+
+# Sitemap location
+Sitemap: https://impactpointchurch.org/sitemap.xml

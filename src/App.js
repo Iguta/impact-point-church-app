@@ -13,6 +13,7 @@ import ContactSection from './components/ContactSection';
 import LiveStreamSection from './components/LiveStreamSection'; // Import LiveStreamSection
 import AdminLogin from './components/AdminLogin'; // Import AdminLogin component
 import FooterSection from './components/FooterSection';
+import SEO from './components/SEO';
 import { ToastNotification } from './utils/Toast';
 import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import styled, { createGlobalStyle } from 'styled-components';
@@ -379,6 +380,7 @@ const App = () => {
   return (
     <AppContainer>
       <GlobalStyle /> {/* Apply global styles */}
+      <SEO /> {/* SEO meta tags and structured data */}
       {/* Skip to content link for accessibility */}
       <a href="#home" className="skip-to-content" tabIndex="0">
         Skip to main content
