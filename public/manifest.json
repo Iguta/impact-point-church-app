@@ -4,21 +4,31 @@
   "description": "Join Impact Point Church in Indianapolis, IN for inspiring worship services, engaging sermons, community events, and meaningful ministries.",
   "icons": [
     {
-      "src": "assets/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "assets/favicon-16.png",
+      "type": "image/png",
+      "sizes": "16x16"
     },
     {
-      "src": "assets/logo192.png",
+      "src": "assets/favicon-32.png",
+      "type": "image/png",
+      "sizes": "32x32"
+    },
+    {
+      "src": "assets/icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/logo512.png",
+      "src": "assets/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
+    },
+    {
+      "src": "assets/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180"
     }
   ],
   "start_url": "/",

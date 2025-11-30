@@ -366,7 +366,7 @@ const App = () => {
     <AppContainer>
       <GlobalStyle /> {/* Apply global styles */}
       <SEO /> {/* SEO meta tags and structured data */}
-      <Header />
+      <Header onShowToast={showToast} />
       {/* Toast Notification */}
       <ToastNotification 
         message={toastMessage} 
