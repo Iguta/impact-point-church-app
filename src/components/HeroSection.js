@@ -31,7 +31,7 @@ const HeroSectionContainer = styled.section`
     right: 0;
     bottom: 0;
     background-size: cover;
-    background-position: center center;
+    background-position: top center;
     background-repeat: no-repeat;
     z-index: 0;
     transition: background-image 0.8s ease-in-out;
@@ -523,6 +523,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
   });
   const [newSlideUploadStatus, setNewSlideUploadStatus] = useState(null);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState(0); // Key to reset file input
 
   // Use data directly from Firestore (no Storage fetching needed)
   useEffect(() => {
@@ -530,18 +531,28 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
       setSlides(data);
       // Reset to first slide if current index is out of bounds
       setCurrentSlideIndex((prev) => (prev >= data.length ? 0 : prev));
+      // Only sync tempSlides when NOT editing (to avoid overwriting user's changes)
       if (!isEditing) {
         setTempSlides(data);
       }
     }
   }, [data, isEditing]);
 
-  // Sync tempSlides when entering edit mode
+  // Sync tempSlides when entering edit mode (only on initial entry, not when slides change)
   useEffect(() => {
-    if (isEditing && !isEqual(slides, tempSlides) && slides.length > 0) {
-      setTempSlides(slides);
+    if (isEditing && slides.length > 0) {
+      // Only initialize tempSlides if it's empty or doesn't match slides (first time entering edit mode)
+      // This prevents overwriting user's changes while editing
+      setTempSlides(prevTempSlides => {
+        if (prevTempSlides.length === 0 || (prevTempSlides.length === slides.length && 
+            prevTempSlides.every((slide, idx) => slide.id === slides[idx]?.id))) {
+          return slides;
+        }
+        // Keep existing tempSlides if user has made changes
+        return prevTempSlides;
+      });
     }
-  }, [isEditing, slides, tempSlides]);
+  }, [isEditing, slides.length]); // Only depend on isEditing and slides.length, not the full slides array
 
   // Auto-play carousel with pause on hover
   useEffect(() => {
@@ -559,6 +570,9 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
 
   // Admin editing functions
   const handleSaveSlides = () => {
+    // Ensure we're saving the current tempSlides state
+    console.log('Saving slides:', tempSlides.length, 'slides');
+    console.log('Slide IDs:', tempSlides.map(s => s.id));
     onUpdate('heroSlides', tempSlides);
   };
 
@@ -571,24 +585,56 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
   };
 
   const handleAddSlide = () => {
-    if (newSlide.imageUrl && newSlide.title) {
-      const slideToAdd = {
-        ...newSlide,
-        id: `slide-${Date.now()}`,
-      };
-      const updatedSlides = [...tempSlides, slideToAdd];
-      setTempSlides(updatedSlides);
-      setNewSlide({
-        imageUrl: '',
-        title: '',
-        subtitle: '',
-        ctaPrimaryText: '',
-        ctaPrimaryLink: '',
-        ctaSecondaryText: '',
-        ctaSecondaryLink: '',
-        overlayOpacity: 0.6
-      });
+    // Validate required fields
+    if (!newSlide.imageUrl) {
+      setNewSlideUploadStatus({ status: 'error', message: 'Please upload an image or provide an image URL' });
+      setTimeout(() => setNewSlideUploadStatus(null), 3000);
+      return;
     }
+    
+    if (!newSlide.title || newSlide.title.trim() === '') {
+      setNewSlideUploadStatus({ status: 'error', message: 'Please enter a title for the slide' });
+      setTimeout(() => setNewSlideUploadStatus(null), 3000);
+      return;
+    }
+
+    // Add the slide to tempSlides
+    const slideToAdd = {
+      ...newSlide,
+      id: `slide-${Date.now()}`,
+      title: newSlide.title.trim(), // Trim whitespace
+    };
+    
+    // Use functional update to ensure we have the latest tempSlides state
+    setTempSlides(prevSlides => {
+      const updatedSlides = [...prevSlides, slideToAdd];
+      console.log('Adding slide. Total slides now:', updatedSlides.length);
+      console.log('New slide ID:', slideToAdd.id);
+      return updatedSlides;
+    });
+    
+    // Show success message
+    setNewSlideUploadStatus({ status: 'success', message: 'Slide added! Click "Save All Changes" to save.' });
+    
+    // Reset the form
+    setNewSlide({
+      imageUrl: '',
+      title: '',
+      subtitle: '',
+      ctaPrimaryText: '',
+      ctaPrimaryLink: '',
+      ctaSecondaryText: '',
+      ctaSecondaryLink: '',
+      overlayOpacity: 0.6
+    });
+    
+    // Reset file input
+    setFileInputKey(prev => prev + 1);
+    
+    // Clear success message after 5 seconds
+    setTimeout(() => {
+      setNewSlideUploadStatus(null);
+    }, 5000);
   };
 
   const handleDeleteSlide = (id) => {
@@ -912,6 +958,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
                 </label>
                 <FileUploadContainer>
                   <FileInput
+                    key={fileInputKey}
                     type="file"
                     accept="image/*"
                     onChange={(e) => {

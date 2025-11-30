@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import styled from "styled-components";
 import {
   FaInfoCircle,
@@ -6,6 +7,8 @@ import {
   FaCalendarAlt,
   FaUsers,
   FaMapMarkerAlt,
+  FaHeart,
+  FaTimes,
 } from "react-icons/fa";
 
 // ------------------ STYLED COMPONENTS ------------------
@@ -141,6 +144,233 @@ const NavLinks = styled.ul`
   }
 `;
 
+const DonateButton = styled.button`
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, #22c55e, #16a34a); /* Green gradient for donate */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+
+  @media (min-width: 992px) {
+    display: flex;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
+  }
+
+  svg {
+    font-size: 1rem;
+  }
+`;
+
+const ModalBackdrop = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: ${({ isOpen }) => (isOpen ? 'flex' : 'none')};
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: ${({ isOpen }) => (isOpen ? 'fadeIn 0.3s ease' : 'none')};
+  overflow-y: auto;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  position: relative;
+  margin: auto;
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (min-width: 640px) {
+    padding: 2.5rem;
+    max-width: 550px;
+  }
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+`;
+
+const ModalTitle = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  svg {
+    color: #22c55e;
+  }
+`;
+
+const CloseButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  min-height: 36px;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #1A365D;
+    outline-offset: 2px;
+  }
+`;
+
+const CashAppInfo = styled.div`
+  background: linear-gradient(135deg, #00d632, #00b82e);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+`;
+
+const CashAppTag = styled.div`
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  letter-spacing: 0.05em;
+`;
+
+const CashAppLabel = styled.div`
+  font-size: 0.875rem;
+  opacity: 0.9;
+  font-weight: 500;
+`;
+
+const Instructions = styled.div`
+  color: #1f2937;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+
+  p {
+    margin-bottom: 0.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  strong {
+    color: #1A365D;
+    font-weight: 600;
+  }
+
+  ol {
+    margin: 0.75rem 0;
+    padding-left: 1.25rem;
+
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }
+  }
+`;
+
+const CopyButton = styled.button`
+  width: 100%;
+  padding: 0.875rem;
+  background: #1A365D;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  margin-top: 1rem;
+
+  &:hover {
+    background: #2a4a6d;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #1A365D;
+    outline-offset: 2px;
+  }
+`;
+
 const MenuButton = styled.button`
   display: flex; /* Show on mobile */
   align-items: center;
@@ -245,12 +475,13 @@ const MobileMenu = styled.div`
 `;
 
 // ------------------ COMPONENT ------------------
-const Header = () => {
+const Header = ({ onShowToast }) => {
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(64);
+  const [donateModalOpen, setDonateModalOpen] = useState(false);
 
   // Smooth scroll handler with better UX
   const handleSmoothScroll = (e, targetId) => {
@@ -343,6 +574,42 @@ const Header = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [menuOpen]);
 
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && donateModalOpen) {
+        setDonateModalOpen(false);
+      }
+    };
+
+    if (donateModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
+  }, [donateModalOpen]);
+
+  // Copy Cash App tag to clipboard
+  const handleCopyCashApp = () => {
+    navigator.clipboard.writeText('$ImpactPointChurch').then(() => {
+      // Close modal after successful copy
+      setDonateModalOpen(false);
+      // Show toast notification
+      if (onShowToast) {
+        onShowToast('Cash App tag copied to clipboard!', 'success');
+      }
+    }).catch(() => {
+      // Show error toast if copy fails
+      if (onShowToast) {
+        onShowToast('Failed to copy. Please manually copy: $ImpactPointChurch', 'error');
+      }
+    });
+  };
+
   return (
     <HeaderContainer 
       className={headerScrolled ? "scrolled" : ""} 
@@ -403,6 +670,14 @@ const Header = () => {
             </a>
           </li>
         </NavLinks>
+
+        {/* Donate Button */}
+        <DonateButton
+          onClick={() => setDonateModalOpen(true)}
+          aria-label="Donate to Impact Point Church"
+        >
+          <FaHeart /> Donate
+        </DonateButton>
 
         {/* Mobile menu button */}
         <MenuButton
@@ -474,7 +749,69 @@ const Header = () => {
         >
           <FaMapMarkerAlt /> Contact
         </a>
+        <a 
+          href="#donate" 
+          onClick={(e) => {
+            e.preventDefault();
+            setMenuOpen(false);
+            setDonateModalOpen(true);
+          }}
+          role="menuitem"
+        >
+          <FaHeart /> Donate
+        </a>
       </MobileMenu>
+
+      {/* Donate Modal - Rendered as Portal for proper centering */}
+      {donateModalOpen && typeof document !== 'undefined' && createPortal(
+        <ModalBackdrop 
+          isOpen={donateModalOpen}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setDonateModalOpen(false);
+            }
+          }}
+        >
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>
+                <FaHeart /> Give & Support
+              </ModalTitle>
+              <CloseButton
+                onClick={() => setDonateModalOpen(false)}
+                aria-label="Close donation modal"
+              >
+                <FaTimes />
+              </CloseButton>
+            </ModalHeader>
+
+            <CashAppInfo>
+              <CashAppLabel>Cash App Tag</CashAppLabel>
+              <CashAppTag>$ImpactPointChurch</CashAppTag>
+            </CashAppInfo>
+
+            <Instructions>
+              <p style={{ marginBottom: '0.75rem' }}>
+                <strong>How to Give:</strong>
+              </p>
+              <ol style={{ marginLeft: '1.25rem', marginBottom: '1rem' }}>
+                <li>Open Cash App and search for <strong>$ImpactPointChurch</strong></li>
+                <li>Enter your donation amount</li>
+                <li><strong>Add a note</strong> in the "For" field (e.g., "Offering", "Tithe", "Building Fund")</li>
+                <li>Complete your payment</li>
+              </ol>
+              <p style={{ fontStyle: 'italic', color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                Thank you for your generous support!
+              </p>
+            </Instructions>
+
+            <CopyButton onClick={handleCopyCashApp}>
+              Copy Cash App Tag
+            </CopyButton>
+          </ModalContent>
+        </ModalBackdrop>,
+        document.body
+      )}
     </HeaderContainer>
   );
 };
