@@ -215,15 +215,16 @@ const ModalBackdrop = styled.div`
 const ModalContent = styled.div`
   background: white;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
   max-width: 500px;
-  width: 100%;
+  width: calc(100% - 2rem);
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
   position: relative;
   margin: auto;
+  min-width: 0; /* Prevents flex item from overflowing */
 
   @keyframes slideUp {
     from {
@@ -236,9 +237,15 @@ const ModalContent = styled.div`
     }
   }
 
+  @media (min-width: 375px) {
+    width: calc(100% - 2rem);
+    padding: 2rem;
+  }
+
   @media (min-width: 640px) {
     padding: 2.5rem;
     max-width: 550px;
+    width: 100%;
   }
 `;
 
@@ -291,24 +298,59 @@ const CloseButton = styled.button`
 const CashAppInfo = styled.div`
   background: linear-gradient(135deg, #00d632, #00b82e);
   color: white;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-radius: 12px;
   margin-bottom: 1.5rem;
   text-align: center;
+  min-width: 0; /* Prevents flex item from overflowing */
+  overflow: hidden; /* Prevents content from overflowing */
+
+  @media (min-width: 640px) {
+    padding: 1.5rem;
+  }
 `;
 
-const CashAppTag = styled.div`
+const CashAppTagBase = styled.div`
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   letter-spacing: 0.05em;
+  max-width: 100%;
+  display: block;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  /* Responsive base sizes - will be adjusted by JS to fit */
+  @media (max-width: 374px) {
+    font-size: 1.25rem;
+  }
+  
+  @media (min-width: 375px) and (max-width: 479px) {
+    font-size: 1.5rem;
+  }
+  
+  @media (min-width: 480px) and (max-width: 639px) {
+    font-size: 1.75rem;
+  }
+  
+  @media (min-width: 640px) {
+    font-size: 2rem;
+  }
 `;
+
+const CashAppTag = React.forwardRef((props, ref) => (
+  <CashAppTagBase ref={ref} {...props} />
+));
+CashAppTag.displayName = 'CashAppTag';
 
 const CashAppLabel = styled.div`
   font-size: 0.875rem;
   opacity: 0.9;
   font-weight: 500;
+  margin-bottom: 0.5rem;
 `;
 
 const Instructions = styled.div`
@@ -482,6 +524,7 @@ const Header = ({ onShowToast }) => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(64);
   const [donateModalOpen, setDonateModalOpen] = useState(false);
+  const cashAppTagRef = React.useRef(null);
 
   // Smooth scroll handler with better UX
   const handleSmoothScroll = (e, targetId) => {
@@ -590,6 +633,40 @@ const Header = ({ onShowToast }) => {
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
+    };
+  }, [donateModalOpen]);
+
+  // Auto-resize Cash App tag to fit container
+  useEffect(() => {
+    if (!donateModalOpen || !cashAppTagRef.current) return;
+
+    const resizeText = () => {
+      const element = cashAppTagRef.current;
+      if (!element) return;
+
+      const container = element.parentElement;
+      if (!container) return;
+
+      const containerWidth = container.offsetWidth - 48; // Account for padding
+      const text = element.textContent;
+      
+      // Start with a reasonable font size
+      let fontSize = parseFloat(window.getComputedStyle(element).fontSize);
+      element.style.fontSize = `${fontSize}px`;
+      
+      // Decrease font size until text fits
+      while (element.scrollWidth > containerWidth && fontSize > 12) {
+        fontSize -= 1;
+        element.style.fontSize = `${fontSize}px`;
+      }
+    };
+
+    // Resize on mount and window resize
+    resizeText();
+    window.addEventListener('resize', resizeText);
+    
+    return () => {
+      window.removeEventListener('resize', resizeText);
     };
   }, [donateModalOpen]);
 
@@ -787,7 +864,7 @@ const Header = ({ onShowToast }) => {
 
             <CashAppInfo>
               <CashAppLabel>Cash App Tag</CashAppLabel>
-              <CashAppTag>$ImpactPointChurch</CashAppTag>
+              <CashAppTag ref={cashAppTagRef}>$ImpactPointChurch</CashAppTag>
             </CashAppInfo>
 
             <Instructions>
