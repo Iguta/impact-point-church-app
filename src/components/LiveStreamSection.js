@@ -158,6 +158,45 @@ const CheckboxContainer = styled.div`
   }
 `;
 
+// Utility function to convert YouTube URLs to embed format
+const convertYouTubeUrlToEmbed = (url) => {
+  if (!url || typeof url !== 'string') return url;
+  
+  // If it's already an embed URL, return as is
+  if (url.includes('youtube.com/embed/') || url.includes('youtu.be/embed/')) {
+    return url;
+  }
+
+  let videoId = null;
+
+  // Extract video ID from various YouTube URL formats
+  // Format: https://www.youtube.com/live/video-id?si=...
+  const liveMatch = url.match(/youtube\.com\/live\/([^?&]+)/);
+  if (liveMatch) {
+    videoId = liveMatch[1];
+  }
+  
+  // Format: https://www.youtube.com/watch?v=video-id
+  const watchMatch = url.match(/[?&]v=([^&]+)/);
+  if (watchMatch && !videoId) {
+    videoId = watchMatch[1];
+  }
+  
+  // Format: https://youtu.be/video-id
+  const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+  if (shortMatch && !videoId) {
+    videoId = shortMatch[1];
+  }
+
+  // If we found a video ID, convert to embed format
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1`;
+  }
+
+  // If no match, return original URL
+  return url;
+};
+
 const LiveStreamSection = ({ data, isEditing, onUpdate }) => {
   const [tempStreamData, setTempStreamData] = useState(data);
 
@@ -171,6 +210,13 @@ const LiveStreamSection = ({ data, isEditing, onUpdate }) => {
 
   const handleSave = () => {
     onUpdate('liveStream', tempStreamData);
+  };
+
+  const handleEmbedUrlChange = (e) => {
+    const inputValue = e.target.value;
+    // Convert YouTube URL to embed format if it's a YouTube URL
+    const convertedUrl = convertYouTubeUrlToEmbed(inputValue);
+    setTempStreamData({ ...tempStreamData, embedUrl: convertedUrl });
   };
 
   const [contentRef, isVisible] = useScrollAnimation({ threshold: 0.1 });
@@ -204,10 +250,15 @@ const LiveStreamSection = ({ data, isEditing, onUpdate }) => {
             />
             <Input
               type="text"
-              placeholder="Video Embed URL (e.g., YouTube embed link)"
+              placeholder="Video Embed URL (e.g., YouTube embed link or YouTube live URL)"
               value={tempStreamData.embedUrl}
-              onChange={(e) => setTempStreamData({ ...tempStreamData, embedUrl: e.target.value })}
+              onChange={handleEmbedUrlChange}
             />
+            {tempStreamData.embedUrl && tempStreamData.embedUrl.includes('youtube.com') && (
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                YouTube URLs are automatically converted to embed format
+              </p>
+            )}
             <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Live Stream Settings</Button>
           </AdminControls>
         ) : (
