@@ -105,6 +105,26 @@ const AboutImageWrapper = styled.div`
   }
 `;
 
+const ImageCaption = styled.p`
+  margin-top: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  padding: 0 1rem;
+
+  @media (min-width: 640px) {
+    font-size: 1rem;
+    margin-top: 1.25rem;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 1.0625rem;
+    margin-top: 1.5rem;
+  }
+`;
+
 const FileUploadContainer = styled.div`
   position: relative;
   margin-bottom: 1rem;
@@ -482,6 +502,15 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
               onChange={(e) => setTempData({ ...tempData, imageUrl: e.target.value })}
               aria-label="About image URL"
             />
+
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginTop: '1.5rem', marginBottom: '1rem', color: '#1f2937' }}>Image Caption</h3>
+            <TextArea
+              placeholder="Enter image caption (e.g., Bible verse or description)"
+              value={tempData?.imageCaption || ''}
+              onChange={(e) => setTempData({ ...tempData, imageCaption: e.target.value })}
+              rows="3"
+              aria-label="Image caption"
+            />
             
             <Button onClick={handleSave} className="bg-indigo-600">Save About</Button>
           </FormSpace>
@@ -517,25 +546,30 @@ const AboutSection = ({ data, isEditing, onUpdate }) => {
 
             {/* Image below Mission and Vision */}
             {(data?.imageUrl || tempData?.imageUrl) && (
-              <AboutImageWrapper>
-                <img
-                  src={data?.imageUrl || tempData?.imageUrl}
-                  alt="About Impact Point Church"
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
-                    objectFit: 'cover'
-                  }}
-                  loading="lazy"
-                  onError={(e) => {
-                    if (e.target.src !== "https://firebasestorage.googleapis.com/v0/b/impact-point-church.firebasestorage.app/o/IMG-20250810-WA0012.jpg?alt=media&token=16d6924b-3eea-4197-8899-f40b7d5933a6") {
-                      e.target.onerror = null;
-                      e.target.src = "https://firebasestorage.googleapis.com/v0/b/impact-point-church.firebasestorage.app/o/IMG-20250810-WA0012.jpg?alt=media&token=16d6924b-3eea-4197-8899-f40b7d5933a6";
-                    }
-                  }}
-                />
-              </AboutImageWrapper>
+              <>
+                <AboutImageWrapper>
+                  <img
+                    src={data?.imageUrl || tempData?.imageUrl}
+                    alt="About Impact Point Church"
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      display: 'block',
+                      objectFit: 'cover'
+                    }}
+                    loading="lazy"
+                    onError={(e) => {
+                      if (e.target.src !== "https://firebasestorage.googleapis.com/v0/b/impact-point-church.firebasestorage.app/o/IMG-20250810-WA0012.jpg?alt=media&token=16d6924b-3eea-4197-8899-f40b7d5933a6") {
+                        e.target.onerror = null;
+                        e.target.src = "https://firebasestorage.googleapis.com/v0/b/impact-point-church.firebasestorage.app/o/IMG-20250810-WA0012.jpg?alt=media&token=16d6924b-3eea-4197-8899-f40b7d5933a6";
+                      }
+                    }}
+                  />
+                </AboutImageWrapper>
+                <ImageCaption>
+                  {data?.imageCaption || tempData?.imageCaption || 'Matthew 19:14: "Let the little children come to me, and do not forbid them; for of such is the kingdom of heaven"'}
+                </ImageCaption>
+              </>
             )}
           </>
         )}
