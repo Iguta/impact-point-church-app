@@ -670,21 +670,23 @@ const Header = ({ onShowToast }) => {
     };
   }, [donateModalOpen]);
 
-  // Copy Cash App tag to clipboard
-  const handleCopyCashApp = () => {
-    navigator.clipboard.writeText('$ImpactPointChurch').then(() => {
-      // Close modal after successful copy
-      setDonateModalOpen(false);
-      // Show toast notification
-      if (onShowToast) {
-        onShowToast('Cash App tag copied to clipboard!', 'success');
-      }
-    }).catch(() => {
-      // Show error toast if copy fails
-      if (onShowToast) {
-        onShowToast('Failed to copy. Please manually copy: $ImpactPointChurch', 'error');
-      }
-    });
+  // Launch Cash App with the cashtag
+  const handleOpenCashApp = () => {
+    const cashAppTag = '$ImpactPointChurch';
+    const webLink = `https://cash.app/${cashAppTag}`;
+    
+    // Close modal first
+    setDonateModalOpen(false);
+    
+    // Open Cash App - the web link will automatically open the app if installed on mobile
+    // or open the web version if app is not installed
+    // Use window.location.href for better mobile app launching
+    window.location.href = webLink;
+    
+    // Show toast notification
+    if (onShowToast) {
+      onShowToast('Opening Cash App...', 'success');
+    }
   };
 
   return (
@@ -872,7 +874,7 @@ const Header = ({ onShowToast }) => {
                 <strong>How to Give:</strong>
               </p>
               <ol style={{ marginLeft: '1.25rem', marginBottom: '1rem' }}>
-                <li>Open Cash App and search for <strong>$ImpactPointChurch</strong></li>
+                <li>Click the button below to open Cash App</li>
                 <li>Enter your donation amount</li>
                 <li><strong>Add a note</strong> in the "For" field (e.g., "Offering", "Tithe", "Building Fund")</li>
                 <li>Complete your payment</li>
@@ -882,8 +884,8 @@ const Header = ({ onShowToast }) => {
               </p>
             </Instructions>
 
-            <CopyButton onClick={handleCopyCashApp}>
-              Copy Cash App Tag
+            <CopyButton onClick={handleOpenCashApp}>
+              Open in Cash App
             </CopyButton>
           </ModalContent>
         </ModalBackdrop>,

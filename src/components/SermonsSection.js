@@ -104,13 +104,49 @@ const CardDetail = styled.p`
 
 const CardDescription = styled.p`
   color: #4b5563;
-  margin-bottom: 1rem;
+  margin-bottom: ${({ isExpanded }) => (isExpanded ? '1rem' : '0.5rem')};
   flex-grow: 1;
   line-height: 1.6;
   font-size: 0.9375rem;
+  overflow: hidden;
+  ${({ isExpanded }) => !isExpanded && `
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    max-height: calc(1.6em * 4);
+  `}
 
   @media (min-width: 640px) {
     font-size: 1rem;
+  }
+`;
+
+const ReadMoreButton = styled.button`
+  background: none;
+  border: none;
+  color: #4f46e5;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0;
+  margin-top: 0.5rem;
+  text-align: left;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #4338ca;
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (min-width: 640px) {
+    font-size: 0.9375rem;
   }
 `;
 
@@ -194,14 +230,15 @@ const FormSpace = styled.div`
 `;
 
 const SermonsSection = ({ data, isEditing, onUpdate }) => {
-  const [tempSermons, setTempSermons] = useState(data);
+  const [tempSermons, setTempSermons] = useState(Array.isArray(data) ? data : []);
   const [editingSermon, setEditingSermon] = useState(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState(new Set());
   const [newSermon, setNewSermon] = useState({
     title: '', speaker: '', date: '', description: '', videoLink: '', audioLink: ''
   });
 
   useEffect(() => {
-    setTempSermons(data);
+    setTempSermons(Array.isArray(data) ? data : []);
   }, [data]);
 
   const startEdit = (sermon) => {
@@ -226,10 +263,13 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
   const handleAddSermon = () => {
     if (newSermon.title && newSermon.speaker && newSermon.date) {
       const sermonToAdd = { ...newSermon, id: `sermon-${Date.now()}` };
-      const updatedSermons = [...tempSermons, sermonToAdd];
+      const currentSermons = Array.isArray(tempSermons) ? tempSermons : [];
+      const updatedSermons = [...currentSermons, sermonToAdd];
       setTempSermons(updatedSermons);
       onUpdate('sermons', updatedSermons);
       setNewSermon({ title: '', speaker: '', date: '', description: '', videoLink: '', audioLink: '' });
+    } else {
+      alert('Please fill in at least Title, Speaker, and Date to add a sermon.');
     }
   };
 
@@ -239,14 +279,120 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
     onUpdate('sermons', updatedSermons, 'delete');
   };
 
+  const toggleDescription = (sermonId) => {
+    setExpandedDescriptions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sermonId)) {
+        newSet.delete(sermonId);
+      } else {
+        newSet.add(sermonId);
+      }
+      return newSet;
+    });
+  };
+
+  const shouldShowReadMore = (description) => {
+    return description && description.length > 200;
+  };
+
   // Sort sermons by date in descending order
-  const sortedSermons = [...tempSermons].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const currentSermons = Array.isArray(tempSermons) ? tempSermons : [];
+  const sortedSermons = [...currentSermons].sort((a, b) => {
+    const dateA = new Date(a.date || 0);
+    const dateB = new Date(b.date || 0);
+    return dateB - dateA;
+  });
   const [sectionRef, isSectionVisible] = useScrollAnimation({ threshold: 0.1 });
 
   return (
     <SectionContainer id="sermons" role="region" aria-labelledby="sermons-title">
       <ContentWrapper ref={sectionRef}>
         <SectionTitle id="sermons-title">Latest Sermons</SectionTitle>
+        
+        {/* Add New Sermon Form - Always at the top when editing */}
+        {isEditing && (
+          <SermonCard 
+            style={{ 
+              border: '2px dashed #4f46e5', 
+              backgroundColor: '#f0f4ff',
+              marginBottom: '2rem',
+              opacity: 1,
+              transform: 'none'
+            }}
+          >
+            <CardTitle style={{ color: '#4f46e5', fontSize: '1.5rem' }}>➕ Add New Sermon</CardTitle>
+            <FormSpace>
+              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                Title <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter sermon title"
+                value={newSermon.title}
+                onChange={(e) => setNewSermon({ ...newSermon, title: e.target.value })}
+                required
+              />
+              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                Speaker <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter speaker name"
+                value={newSermon.speaker}
+                onChange={(e) => setNewSermon({ ...newSermon, speaker: e.target.value })}
+                required
+              />
+              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                Date <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <Input
+                type="date"
+                placeholder="Date (YYYY-MM-DD)"
+                value={newSermon.date}
+                onChange={(e) => setNewSermon({ ...newSermon, date: e.target.value })}
+                required
+              />
+              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                Description
+              </label>
+              <TextArea
+                placeholder="Enter sermon description (optional)"
+                value={newSermon.description}
+                onChange={(e) => setNewSermon({ ...newSermon, description: e.target.value })}
+                rows="3"
+              />
+              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                Video Link (YouTube URL)
+              </label>
+              <Input
+                type="text"
+                placeholder="https://youtube.com/embed/..."
+                value={newSermon.videoLink}
+                onChange={(e) => setNewSermon({ ...newSermon, videoLink: e.target.value })}
+              />
+              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                Audio Link (MP3, etc.)
+              </label>
+              <Input
+                type="text"
+                placeholder="https://example.com/audio.mp3"
+                value={newSermon.audioLink}
+                onChange={(e) => setNewSermon({ ...newSermon, audioLink: e.target.value })}
+              />
+              <Button 
+                onClick={handleAddSermon} 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                style={{ marginTop: '0.5rem', padding: '0.75rem', fontWeight: 600 }}
+              >
+                <Icon name="plusCircle" className="mr-1" /> Add Sermon
+              </Button>
+              <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                <span style={{ color: '#ef4444' }}>*</span> Required fields
+              </p>
+            </FormSpace>
+          </SermonCard>
+        )}
+
         <SermonsGrid>
           {sortedSermons.map((sermon, index) => (
             <SermonCard 
@@ -300,7 +446,19 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
                   <CardTitle>{sermon.title}</CardTitle>
                   <CardDetail><strong>Speaker:</strong> {sermon.speaker}</CardDetail>
                   <CardDetail><strong>Date:</strong> {sermon.date}</CardDetail>
-                  <CardDescription>{sermon.description}</CardDescription>
+                  <div>
+                    <CardDescription isExpanded={expandedDescriptions.has(sermon.id)}>
+                      {sermon.description || 'No description available.'}
+                    </CardDescription>
+                    {shouldShowReadMore(sermon.description) && (
+                      <ReadMoreButton
+                        onClick={() => toggleDescription(sermon.id)}
+                        aria-label={expandedDescriptions.has(sermon.id) ? 'Read less' : 'Read more'}
+                      >
+                        {expandedDescriptions.has(sermon.id) ? 'Read less' : 'Read more'}
+                      </ReadMoreButton>
+                    )}
+                  </div>
                   <LinksContainer>
                     {sermon.videoLink && (
                       <a
@@ -337,53 +495,6 @@ const SermonsSection = ({ data, isEditing, onUpdate }) => {
               )}
             </SermonCard>
           ))}
-
-          {isEditing && (
-            <SermonCard>
-              <CardTitle>Add New Sermon</CardTitle>
-              <FormSpace>
-                <Input
-                  type="text"
-                  placeholder="Title"
-                  value={newSermon.title}
-                  onChange={(e) => setNewSermon({ ...newSermon, title: e.target.value })}
-                />
-                <Input
-                  type="text"
-                  placeholder="Speaker"
-                  value={newSermon.speaker}
-                  onChange={(e) => setNewSermon({ ...newSermon, speaker: e.target.value })}
-                />
-                <Input
-                  type="date"
-                  placeholder="Date (YYYY-MM-DD)"
-                  value={newSermon.date}
-                  onChange={(e) => setNewSermon({ ...newSermon, date: e.target.value })}
-                />
-                <TextArea
-                  placeholder="Description"
-                  value={newSermon.description}
-                  onChange={(e) => setNewSermon({ ...newSermon, description: e.target.value })}
-                  rows="3"
-                />
-                <Input
-                  type="text"
-                  placeholder="Video Embed Link"
-                  value={newSermon.videoLink}
-                  onChange={(e) => setNewSermon({ ...newSermon, videoLink: e.target.value })}
-                />
-                <Input
-                  type="text"
-                  placeholder="Audio Link"
-                  value={newSermon.audioLink}
-                  onChange={(e) => setNewSermon({ ...newSermon, audioLink: e.target.value })}
-                />
-                <Button onClick={handleAddSermon} className="bg-green-600 hover:bg-green-700 text-white">
-                  <Icon name="plusCircle" className="mr-1" /> Add Sermon
-                </Button>
-              </FormSpace>
-            </SermonCard>
-          )}
         </SermonsGrid>
       </ContentWrapper>
     </SectionContainer>
