@@ -81,12 +81,18 @@ const SEO = ({
       }
     };
 
-    // LocalBusiness schema for better local SEO
+    // LocalBusiness schema for better local SEO - Enhanced for Google Maps
     const localBusinessSchema = {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       '@id': `${defaultUrl}#localbusiness`,
-      name: 'Impact Point Church - Kenyan Church in Indianapolis',
+      name: 'Impact Point Church',
+      alternateName: [
+        'Impact Point Church - Kenyan Church in Indianapolis',
+        'Kenyan Church Indianapolis',
+        'Kenyan Church in Indiana',
+        'African Church Indianapolis'
+      ],
       image: seoImage,
       telephone: '+1-317-555-7729',
       priceRange: 'Free',
@@ -115,21 +121,39 @@ const SEO = ({
           dayOfWeek: 'Saturday',
           opens: '10:00',
           closes: '14:00'
+        },
+        {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: 'Sunday',
+          opens: '09:00',
+          closes: '12:00'
         }
       ],
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: '5',
         reviewCount: '10'
-      }
+      },
+      description: 'Impact Point Church - A vibrant Kenyan church in Indianapolis, IN. Making a lasting impact in our community through faith and purpose.',
+      url: defaultUrl
     };
 
-    // Place of Worship schema
+    // Place of Worship schema - Enhanced for Google Maps
     const placeOfWorshipSchema = {
       '@context': 'https://schema.org',
       '@type': 'PlaceOfWorship',
-      name: 'Impact Point Church - Kenyan Church in Indianapolis',
+      '@id': `${defaultUrl}#placeofworship`,
+      name: 'Impact Point Church',
+      alternateName: [
+        'Impact Point Church - Kenyan Church in Indianapolis',
+        'Kenyan Church Indianapolis',
+        'Kenyan Church in Indiana',
+        'African Church Indianapolis',
+        'Kenyan Christian Church Indianapolis'
+      ],
       url: defaultUrl,
+      image: seoImage,
+      description: 'Impact Point Church - A vibrant Kenyan church in Indianapolis, IN. Making a lasting impact in our community through faith and purpose.',
       address: {
         '@type': 'PostalAddress',
         streetAddress: '546 E 17th St #100',
@@ -143,11 +167,20 @@ const SEO = ({
         latitude: 39.790563,
         longitude: -86.150016
       },
+      telephone: '+1-317-555-7729',
+      email: 'info@impactpointchurch.org',
       openingHours: [
         'Mo-Fr 09:00-17:00',
         'Sa 10:00-14:00',
         'Su 09:00-12:00'
-      ]
+      ],
+      priceRange: 'Free',
+      areaServed: {
+        '@type': 'City',
+        name: 'Indianapolis'
+      },
+      servesCuisine: 'Kenyan',
+      keywords: 'Kenyan church, African church, church Indianapolis, church Indiana, Christian church, worship services'
     };
 
     // Breadcrumb schema for navigation
@@ -186,10 +219,10 @@ const SEO = ({
       element.setAttribute('content', content);
     };
 
-    // Update primary meta tags
+    // Update primary meta tags - Enhanced with local search keywords
     updateMetaTag('name', 'title', seoTitle);
     updateMetaTag('name', 'description', seoDescription);
-    updateMetaTag('name', 'keywords', 'Kenyan church, Kenyan church Indianapolis, Kenyan church in Indiana, Impact Point Church, church Indianapolis, worship services, Christian church, church in Indiana, faith community, sermons, Bible study, community outreach, church ministries, Sunday service, Indianapolis church, Christian community, church events, African church Indianapolis, Kenyan Christian community');
+    updateMetaTag('name', 'keywords', 'Impact Point Church, Kenyan church, Kenyan church Indianapolis, Kenyan church in Indiana, Kenyan church near me, African church Indianapolis, church Indianapolis, church in Indiana, church near me Indianapolis, Christian church Indianapolis, worship services Indianapolis, Kenyan Christian community, Bible study Indianapolis, Sunday service Indianapolis, church events Indianapolis, faith community Indianapolis, sermons Indianapolis, church ministries Indianapolis, Christian community Indiana, Kenyan church 46202, church downtown Indianapolis');
 
     // Update Open Graph tags
     updateMetaTag('property', 'og:title', seoTitle);

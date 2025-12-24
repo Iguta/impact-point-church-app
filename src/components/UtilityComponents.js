@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import styled from 'styled-components';
-import { Church, Calendar, Mic, Users, MapPin, Mail, Phone, PlusCircle, Trash2, Edit, ExternalLink, ChevronLeft, ChevronRight, PlayCircle, Wifi} from 'lucide-react';
+import { Church, Calendar, Mic, Users, MapPin, Mail, Phone, PlusCircle, Trash2, Edit, ExternalLink, ChevronLeft, ChevronRight, PlayCircle, Wifi, Video, Upload, Clock, Share2, Bold, Italic} from 'lucide-react';
 
 // --- Custom Social Media SVG Icons (as React Components) ---
 // These are simple SVG paths for common social media logos
@@ -178,6 +178,12 @@ export const Icon = ({ name, className = '', size = 24 }) => {
     chevronRight: <ChevronRight className={className} size={size} />,
     playCircle: <PlayCircle className={className} size={size} />, // Added for LiveStreamSection
     wifi: <Wifi className={className} size={size} />, // Added for LiveStreamSection
+    video: <Video className={className} size={size} />, // Added for Zoom links
+    upload: <Upload className={className} size={size} />, // Added for file uploads
+    clock: <Clock className={className} size={size} />, // Added for event time
+    share2: <Share2 className={className} size={size} />, // Added for social sharing
+    bold: <Bold className={className} size={size} />, // Added for rich text editor
+    italic: <Italic className={className} size={size} />, // Added for rich text editor
     // Custom Social Media SVG Icons
     facebook: <FacebookIconSVG className={className} size={size} />,
     instagram: <InstagramIconSVG className={className} size={size} />,
@@ -338,7 +344,196 @@ export const SectionTitle = styled.h2`
   }
 `;
 
+// Rich Text Editor Component with Bold and Italic buttons
+const FormatToolbar = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+  border: 2px solid #d1d5db;
+  border-bottom: none;
+`;
 
+const FormatButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #4f46e5;
+  transition: all 0.2s ease;
 
+  &:hover {
+    background: #f3f4f6;
+    border-color: #4f46e5;
+  }
+
+  &:active {
+    background: #e5e7eb;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+const RichTextArea = styled(TextArea)`
+  border-radius: 0 0 8px 8px;
+  border-top: none;
+`;
+
+export const RichTextEditor = ({ value, onChange, placeholder, rows = 3, ...props }) => {
+  const textareaRef = useRef(null);
+
+  const insertFormatting = (openTag, closeTag) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.substring(start, end);
+    const beforeText = value.substring(0, start);
+    const afterText = value.substring(end);
+
+    let newText;
+    if (selectedText) {
+      // If text is selected, wrap it
+      newText = beforeText + openTag + selectedText + closeTag + afterText;
+    } else {
+      // If no text selected, insert tags and place cursor between them
+      newText = beforeText + openTag + closeTag + afterText;
+    }
+
+    onChange({ target: { value: newText } });
+
+    // Set cursor position after the opening tag
+    setTimeout(() => {
+      textarea.focus();
+      if (selectedText) {
+        textarea.setSelectionRange(start + openTag.length, end + openTag.length);
+      } else {
+        textarea.setSelectionRange(start + openTag.length, start + openTag.length);
+      }
+    }, 0);
+  };
+
+  const insertLineBreak = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const beforeText = value.substring(0, start);
+    const afterText = value.substring(end);
+
+    const newText = beforeText + '<br>' + afterText;
+    onChange({ target: { value: newText } });
+
+    // Set cursor position after the line break
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + 4, start + 4); // 4 is length of '<br>'
+    }, 0);
+  };
+
+  const handleBold = () => {
+    insertFormatting('<b>', '</b>');
+  };
+
+  const handleItalic = () => {
+    insertFormatting('<i>', '</i>');
+  };
+
+  const handleLineBreak = () => {
+    insertLineBreak();
+  };
+
+  const handleKeyDown = (e) => {
+    // Handle Enter key to insert line break
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      insertLineBreak();
+    }
+  };
+
+  return (
+    <div>
+      <FormatToolbar>
+        <FormatButton
+          type="button"
+          onClick={handleBold}
+          aria-label="Bold"
+          title="Bold"
+        >
+          <Icon name="bold" size={18} />
+        </FormatButton>
+        <FormatButton
+          type="button"
+          onClick={handleItalic}
+          aria-label="Italic"
+          title="Italic"
+        >
+          <Icon name="italic" size={18} />
+        </FormatButton>
+        <FormatButton
+          type="button"
+          onClick={handleLineBreak}
+          aria-label="Line Break"
+          title="Insert Line Break (or press Enter)"
+        >
+          <span style={{ fontSize: '14px', fontWeight: 600 }}>↵</span>
+        </FormatButton>
+      </FormatToolbar>
+      <RichTextArea
+        ref={textareaRef}
+        value={value}
+        onChange={onChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        rows={rows}
+        {...props}
+      />
+    </div>
+  );
+};
+
+// Helper component to safely render HTML content
+export const RichTextContent = ({ content, className = '' }) => {
+  if (!content) return null;
+
+  // Simple HTML sanitization - only allow basic formatting tags
+  const sanitizeHTML = (html) => {
+    return html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
+      .replace(/<[^>]*>/g, (match) => {
+        // Only allow specific tags
+        const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'br', 'p'];
+        // Extract tag name, handling both <tag> and <tag/> formats
+        const tagName = match.replace(/[<>\/]/g, '').split(' ')[0].toLowerCase();
+        if (allowedTags.includes(tagName)) {
+          // Normalize self-closing tags
+          if (tagName === 'br' && !match.includes('</')) {
+            return '<br>';
+          }
+          return match;
+        }
+        return '';
+      });
+  };
+
+  return (
+    <div
+      className={className}
+      dangerouslySetInnerHTML={{ __html: sanitizeHTML(content) }}
+    />
+  );
+};
 
 
