@@ -8,7 +8,6 @@ import AboutSection from './components/AboutSection';
 import SermonsSection from './components/SermonsSection'; // Existing sermons section
 import ServicesSection from './components/ServicesSection'; // New services section
 import EventsSection from './components/EventsSection';
-import AnnouncementsSection from './components/AnnouncementsSection';
 import MinistriesSection from './components/MinistriesSection';
 import ContactSection from './components/ContactSection';
 import LiveStreamSection from './components/LiveStreamSection'; // Import LiveStreamSection
@@ -396,7 +395,6 @@ const App = () => {
         <SermonsSection data={churchData.sermons} isEditing={isEditing} onUpdate={handleUpdateSection} />
         <MinistriesSection data={churchData.ministries} isEditing={isEditing} onUpdate={handleUpdateSection} />
         <EventsSection data={churchData.events} isEditing={isEditing} onUpdate={handleUpdateSection} />
-        <AnnouncementsSection data={churchData.announcements} isEditing={isEditing} onUpdate={handleUpdateSection} />
         <ContactSection data={churchData.contact} isEditing={isEditing} onUpdate={handleUpdateSection} onShowToast={showToast} />
       </main>
       <FooterSection />
