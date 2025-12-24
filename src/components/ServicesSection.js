@@ -50,11 +50,37 @@ const CardDescription = styled.p`
   color: #555; /* from HTML */
 `;
 
+const ZoomButton = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+
+  &:hover {
+    background: linear-gradient(135deg, #4338ca, #6d28d9);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
 const ServicesSection = ({ data, isEditing, onUpdate }) => {
   const [tempServices, setTempServices] = useState(data);
   const [editingService, setEditingService] = useState(null);
   const [newService, setNewService] = useState({
-    icon: '', title: '', time: '', description: ''
+    icon: '', title: '', time: '', description: '', zoomLink: ''
   });
 
   useEffect(() => {
@@ -86,7 +112,7 @@ const ServicesSection = ({ data, isEditing, onUpdate }) => {
       const updatedServices = [...tempServices, serviceToAdd];
       setTempServices(updatedServices);
       onUpdate('services', updatedServices);
-      setNewService({ icon: '', title: '', time: '', description: '' });
+      setNewService({ icon: '', title: '', time: '', description: '', zoomLink: '' });
     }
   };
 
@@ -125,6 +151,12 @@ const ServicesSection = ({ data, isEditing, onUpdate }) => {
                   onChange={(e) => setEditingService({ ...editingService, description: e.target.value })}
                   rows="3"
                 />
+                <Input
+                  type="url"
+                  placeholder="Zoom Link (e.g., https://zoom.us/j/MEETING_ID)"
+                  value={editingService.zoomLink || ''}
+                  onChange={(e) => setEditingService({ ...editingService, zoomLink: e.target.value })}
+                />
                 <Button onClick={handleUpdateService} className="bg-indigo-600 hover:bg-indigo-700 text-white flex-1">Save</Button>
                 <Button onClick={cancelEdit} className="bg-gray-400 hover:bg-gray-500 text-white flex-1">Cancel</Button>
               </FormSpace>
@@ -134,6 +166,22 @@ const ServicesSection = ({ data, isEditing, onUpdate }) => {
                 <CardTitle>{service.title}</CardTitle>
                 <CardTime>{service.time}</CardTime>
                 <CardDescription>{service.description}</CardDescription>
+                {service.zoomLink && (
+                  <ZoomButton 
+                    href={service.zoomLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      // Try to open in Zoom app if it's a zoommtg:// link, otherwise open in browser
+                      if (service.zoomLink.startsWith('zoommtg://')) {
+                        window.location.href = service.zoomLink;
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <Icon name="video" className="mr-1" /> Join Zoom Meeting
+                  </ZoomButton>
+                )}
                 {isEditing && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                     <Button onClick={() => startEdit(service)} className="bg-yellow-500 hover:bg-yellow-600 text-white flex-1">
@@ -176,6 +224,12 @@ const ServicesSection = ({ data, isEditing, onUpdate }) => {
                 value={newService.description}
                 onChange={(e) => setNewService({ ...newService, description: e.target.value })}
                 rows="3"
+              />
+              <Input
+                type="url"
+                placeholder="Zoom Link (e.g., https://zoom.us/j/MEETING_ID)"
+                value={newService.zoomLink}
+                onChange={(e) => setNewService({ ...newService, zoomLink: e.target.value })}
               />
               <Button onClick={handleAddService} className="bg-green-600 hover:bg-green-700 text-white">
                 <Icon name="plusCircle" className="mr-1" /> Add Service

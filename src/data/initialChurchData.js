@@ -58,6 +58,7 @@ export const initialChurchData = {
       title: "Sunday Morning",
       time: "9:00 AM & 11:00 AM",
       description: "Join us for inspiring worship, biblical teaching, and community fellowship. Childcare and youth programs available.",
+      zoomLink: "", // Optional Zoom meeting link (e.g., https://zoom.us/j/MEETING_ID or zoommtg://zoom.us/join?confno=MEETING_ID)
     },
     {
       id: "service2",
@@ -65,6 +66,7 @@ export const initialChurchData = {
       title: "Wednesday Evening",
       time: "7:00 PM",
       description: "Midweek service featuring prayer, Bible study, and deeper community connection in a more intimate setting.",
+      zoomLink: "", // Optional Zoom meeting link
     },
     {
       id: "service3",
@@ -72,6 +74,7 @@ export const initialChurchData = {
       title: "Online Services",
       time: "Live Stream Available",
       description: "Can't make it in person? Join our live stream service and be part of our community from anywhere.",
+      zoomLink: "", // Optional Zoom meeting link
     },
   ],
   sermons: [
@@ -102,6 +105,7 @@ export const initialChurchData = {
       time: "10:00 AM - 2:00 PM",
       location: "Church Grounds",
       description: "Join us for a special outdoor service followed by a community barbecue. We'll also be celebrating baptisms!",
+      flyerUrl: "", // Optional flyer image URL
     },
     {
       id: "event2",
@@ -110,6 +114,7 @@ export const initialChurchData = {
       time: "All Week",
       location: "Church Campus",
       description: "An exciting week of learning, games, and fun for children ages 4-12. Registration now open!",
+      flyerUrl: "", // Optional flyer image URL
     },
     {
       id: "event3",
@@ -118,6 +123,7 @@ export const initialChurchData = {
       time: "9:00 AM - 3:00 PM",
       location: "Various City Locations",
       description: "Join us as we serve our community through various volunteer projects around the city.",
+      flyerUrl: "", // Optional flyer image URL
     },
     {
       id: "event4",
@@ -126,6 +132,7 @@ export const initialChurchData = {
       time: "All Weekend",
       location: "Camp Grounds",
       description: "A weekend getaway for our youth to grow in faith, build friendships, and have amazing adventures.",
+      flyerUrl: "", // Optional flyer image URL
     },
   ],
   ministries: [
@@ -144,4 +151,12 @@ export const initialChurchData = {
     officeHours: "Monday - Friday: 9:00 AM - 5:00 PM\nSaturday: 10:00 AM - 2:00 PM",
     mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2910.0504771023648!2d-86.15001572436468!3d39.79056309351256!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x886b50e3a13e5617%3A0x6ab50bd5429bd61c!2s546%20E%2017th%20St%20%23100%2C%20Indianapolis%2C%20IN%2046202!5e1!3m2!1sen!2sus!4v1764119954880!5m2!1sen!2sus",
   },
+  announcements: [
+    {
+      id: "announcement1",
+      title: "Welcome to Impact Point Church",
+      description: "We're excited to have you join us! Check out our upcoming events and get involved in our community.",
+      flyerUrl: "", // Optional flyer image URL
+    },
+  ],
 };
