@@ -376,7 +376,7 @@ const App = () => {
         onClose={handleToastClose} 
       />
       {/* Install Prompt - Prompts users to install the PWA */}
-      <InstallPrompt isAdmin={isAdmin} />
+      <InstallPrompt isAdmin={isAdmin} onShowToast={showToast} />
       {/* Admin Toggle - Only visible to admins */}
       {isAdmin && (
         <AdminToggleContainer>
