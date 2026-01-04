@@ -76,6 +76,15 @@ const InstallButton = styled.button`
     outline: 2px solid white;
     outline-offset: 2px;
   }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  &:disabled:hover {
+    transform: none;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -103,7 +112,7 @@ const CloseButton = styled.button`
   }
 `;
 
-const InstallPrompt = ({ isAdmin = false }) => {
+const InstallPrompt = ({ isAdmin = false, onShowToast }) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -156,22 +165,47 @@ const InstallPrompt = ({ isAdmin = false }) => {
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      // Show the install prompt
-      deferredPrompt.prompt();
+      try {
+        // Show the install prompt (this triggers the native browser install dialog)
+        await deferredPrompt.prompt();
 
-      // Wait for the user to respond
-      const { outcome } = await deferredPrompt.userChoice;
+        // Wait for the user to respond
+        const { outcome } = await deferredPrompt.userChoice;
 
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
+        if (outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+          if (onShowToast) {
+            onShowToast('Installing app...', 'success');
+          }
+          // The app will install, banner will disappear automatically
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+
+        // Clear the deferredPrompt
+        setDeferredPrompt(null);
+        setShowPrompt(false);
+        localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+      } catch (error) {
+        console.error('Error showing install prompt:', error);
+        // If prompt fails, show manual instructions
+        const instructions = 'To install: Look for the install icon (+) in your browser\'s address bar, or go to Menu → Install Impact Point Church';
+        if (onShowToast) {
+          onShowToast(instructions, 'success');
+        } else {
+          alert(instructions);
+        }
+        setShowPrompt(false);
+        localStorage.setItem('pwa-install-dismissed', Date.now().toString());
       }
-
-      // Clear the deferredPrompt
-      setDeferredPrompt(null);
-      setShowPrompt(false);
-      localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    } else {
+      // Fallback: Show manual instructions if native prompt isn't available
+      const instructions = 'To install: Look for the install icon (+) in your browser\'s address bar, or go to Menu → Install Impact Point Church';
+      if (onShowToast) {
+        onShowToast(instructions, 'success');
+      } else {
+        alert(instructions);
+      }
     }
   };
 
@@ -198,9 +232,9 @@ const InstallPrompt = ({ isAdmin = false }) => {
             : 'Get quick access and a better experience'}
         </InstallSubtitle>
       </InstallContent>
-      {!isIOS && deferredPrompt && (
-        <InstallButton onClick={handleInstallClick}>
-          Install
+      {!isIOS && (
+        <InstallButton onClick={handleInstallClick} disabled={!deferredPrompt}>
+          {deferredPrompt ? 'Install' : 'How to Install'}
         </InstallButton>
       )}
       <CloseButton onClick={handleDismiss} aria-label="Dismiss install prompt">
