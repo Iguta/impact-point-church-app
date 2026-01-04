@@ -14,6 +14,7 @@ import LiveStreamSection from './components/LiveStreamSection'; // Import LiveSt
 import AdminLogin from './components/AdminLogin'; // Import AdminLogin component
 import FooterSection from './components/FooterSection';
 import SEO from './components/SEO';
+import InstallPrompt from './components/InstallPrompt';
 import { ToastNotification } from './utils/Toast';
 import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import styled, { createGlobalStyle } from 'styled-components';
@@ -374,6 +375,8 @@ const App = () => {
         type={toastType}
         onClose={handleToastClose} 
       />
+      {/* Install Prompt - Prompts users to install the PWA */}
+      <InstallPrompt isAdmin={isAdmin} />
       {/* Admin Toggle - Only visible to admins */}
       {isAdmin && (
         <AdminToggleContainer>
