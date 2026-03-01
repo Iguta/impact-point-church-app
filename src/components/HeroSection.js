@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import styled from "styled-components";
 import { Button, Icon, Input, TextArea, FormSpace } from "./UtilityComponents";
 import isEqual from "lodash.isequal";
@@ -528,12 +528,19 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
 
   // Filter active slides for display (active !== false, defaults to true)
   // Also ensure we have unique IDs to prevent duplicate slides
-  const activeSlides = slides
-    .filter(slide => slide.active !== false && slide.id) // Ensure slide has an ID
-    .filter((slide, index, self) => 
-      // Remove duplicates by ID
-      index === self.findIndex(s => s.id === slide.id)
-    );
+  // Use useMemo to prevent recalculation on every render
+  const activeSlides = useMemo(() => {
+    return slides
+      .filter(slide => slide.active !== false && slide.id) // Ensure slide has an ID
+      .filter((slide, index, self) => 
+        // Remove duplicates by ID
+        index === self.findIndex(s => s.id === slide.id)
+      );
+  }, [slides]);
+
+  // Refs for debug logging (must be before any conditional returns)
+  const prevActiveSlidesRef = useRef();
+  const prevIndexRef = useRef();
 
   // Ensure currentSlideIndex is valid and update if needed (must be before any returns)
   useEffect(() => {
@@ -541,6 +548,23 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
       setCurrentSlideIndex(0);
     }
   }, [activeSlides.length, currentSlideIndex]);
+
+  // Debug logging (only log when values actually change, not on every render)
+  useEffect(() => {
+    const activeSlidesChanged = JSON.stringify(activeSlides.map(s => s.id)) !== JSON.stringify(prevActiveSlidesRef.current?.map(s => s.id));
+    const indexChanged = currentSlideIndex !== prevIndexRef.current;
+    
+    if (process.env.NODE_ENV === 'development' && (activeSlidesChanged || indexChanged)) {
+      console.log('🔄 Hero Section Update:', {
+        activeSlides: activeSlides.length,
+        currentIndex: currentSlideIndex,
+        currentSlide: activeSlides[currentSlideIndex]?.title
+      });
+    }
+    
+    prevActiveSlidesRef.current = activeSlides.map(s => ({ id: s.id, title: s.title }));
+    prevIndexRef.current = currentSlideIndex;
+  }, [activeSlides, currentSlideIndex]);
 
   // Use data directly from Firestore (no Storage fetching needed)
   useEffect(() => {
@@ -1144,13 +1168,6 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
         </EditModeContainer>
       </HeroSectionContainer>
     );
-  }
-
-  // Debug logging (remove in production if needed)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Active slides:', activeSlides.map(s => ({ id: s.id, title: s.title })));
-    console.log('Current slide index:', currentSlideIndex);
-    console.log('Current slide:', activeSlides[currentSlideIndex]?.title);
   }
 
   if (activeSlides.length === 0) {
