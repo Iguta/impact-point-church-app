@@ -10,6 +10,7 @@ export const initialChurchData = {
       ctaPrimaryLink: "#services",
       ctaSecondaryText: "Learn More",
       ctaSecondaryLink: "#about",
+      active: true,
     },
     {
       id: "slide2",
@@ -20,6 +21,7 @@ export const initialChurchData = {
       ctaPrimaryLink: "#ministries",
       ctaSecondaryText: "Watch Sermons",
       ctaSecondaryLink: "#sermons",
+      active: true,
     },
     {
       id: "slide3",
@@ -30,6 +32,7 @@ export const initialChurchData = {
       ctaPrimaryLink: "#events",
       ctaSecondaryText: "Get Involved",
       ctaSecondaryLink: "#contact",
+      active: true,
     },
   ],
   about: {

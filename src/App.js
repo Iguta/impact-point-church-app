@@ -292,7 +292,6 @@ const App = () => {
     sermons: 'Sermons',
     ministries: 'Ministries',
     events: 'Events',
-    announcements: 'Announcements',
     contact: 'Contact Information'
   };
 

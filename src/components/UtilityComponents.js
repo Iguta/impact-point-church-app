@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import styled from 'styled-components';
-import { Church, Calendar, Mic, Users, MapPin, Mail, Phone, PlusCircle, Trash2, Edit, ExternalLink, ChevronLeft, ChevronRight, PlayCircle, Wifi, Video, Upload, Clock, Share2, Bold, Italic} from 'lucide-react';
+import { Church, Calendar, Mic, Users, MapPin, Mail, Phone, PlusCircle, Trash2, Edit, ExternalLink, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, PlayCircle, Wifi, Video, Upload, Clock, Share2, Bold, Italic} from 'lucide-react';
 
 // --- Custom Social Media SVG Icons (as React Components) ---
 // These are simple SVG paths for common social media logos
@@ -176,6 +176,8 @@ export const Icon = ({ name, className = '', size = 24 }) => {
     externalLink: <ExternalLink className={className} size={size} />,
     chevronLeft: <ChevronLeft className={className} size={size} />,
     chevronRight: <ChevronRight className={className} size={size} />,
+    chevronUp: <ChevronUp className={className} size={size} />,
+    chevronDown: <ChevronDown className={className} size={size} />,
     playCircle: <PlayCircle className={className} size={size} />, // Added for LiveStreamSection
     wifi: <Wifi className={className} size={size} />, // Added for LiveStreamSection
     video: <Video className={className} size={size} />, // Added for Zoom links

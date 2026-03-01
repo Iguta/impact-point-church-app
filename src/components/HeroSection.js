@@ -519,18 +519,29 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
     ctaPrimaryLink: '',
     ctaSecondaryText: '',
     ctaSecondaryLink: '',
-    overlayOpacity: 0.6
+    overlayOpacity: 0.6,
+    active: true
   });
   const [newSlideUploadStatus, setNewSlideUploadStatus] = useState(null);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const [fileInputKey, setFileInputKey] = useState(0); // Key to reset file input
 
+  // Filter active slides for display (active !== false, defaults to true)
+  const activeSlides = slides.filter(slide => slide.active !== false);
+
   // Use data directly from Firestore (no Storage fetching needed)
   useEffect(() => {
     if (data && Array.isArray(data) && data.length > 0) {
       setSlides(data);
-      // Reset to first slide if current index is out of bounds
-      setCurrentSlideIndex((prev) => (prev >= data.length ? 0 : prev));
+      // Filter to active slides and reset to first slide if current index is out of bounds
+      const active = data.filter(slide => slide.active !== false);
+      setCurrentSlideIndex((prev) => {
+        if (prev >= active.length) return 0;
+        // Find the index of the current slide in active slides
+        const currentSlideId = slides[prev]?.id;
+        const newIndex = active.findIndex(s => s.id === currentSlideId);
+        return newIndex >= 0 ? newIndex : 0;
+      });
       // Only sync tempSlides when NOT editing (to avoid overwriting user's changes)
       if (!isEditing) {
         setTempSlides(data);
@@ -556,17 +567,17 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
 
   // Auto-play carousel with pause on hover
   useEffect(() => {
-    // Only auto-play if: not editing, has multiple slides, and not paused
-    if (isEditing || slides.length <= 1 || isCarouselPaused) {
+    // Only auto-play if: not editing, has multiple active slides, and not paused
+    if (isEditing || activeSlides.length <= 1 || isCarouselPaused) {
       return;
     }
 
     const interval = setInterval(() => {
-      setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
+      setCurrentSlideIndex((prev) => (prev + 1) % activeSlides.length);
     }, 5000); // Transition every 5 seconds
 
     return () => clearInterval(interval);
-  }, [slides.length, isEditing, isCarouselPaused]);
+  }, [activeSlides.length, isEditing, isCarouselPaused]);
 
   // Admin editing functions
   const handleSaveSlides = () => {
@@ -603,6 +614,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
       ...newSlide,
       id: `slide-${Date.now()}`,
       title: newSlide.title.trim(), // Trim whitespace
+      active: newSlide.active !== false, // Ensure active defaults to true
     };
     
     // Use functional update to ensure we have the latest tempSlides state
@@ -644,6 +656,33 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
     if (currentSlideIndex >= updatedSlides.length) {
       setCurrentSlideIndex(Math.max(0, updatedSlides.length - 1));
     }
+  };
+
+  const handleToggleSlideActive = (id) => {
+    const updatedSlides = tempSlides.map(s =>
+      s.id === id ? { ...s, active: s.active === false ? true : false } : s
+    );
+    setTempSlides(updatedSlides);
+    // Save immediately
+    onUpdate('heroSlides', updatedSlides);
+  };
+
+  const handleMoveSlide = (id, direction) => {
+    const currentIndex = tempSlides.findIndex(s => s.id === id);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    // Check bounds
+    if (newIndex < 0 || newIndex >= tempSlides.length) return;
+
+    // Create new array with swapped slides
+    const updatedSlides = [...tempSlides];
+    [updatedSlides[currentIndex], updatedSlides[newIndex]] = [updatedSlides[newIndex], updatedSlides[currentIndex]];
+    
+    setTempSlides(updatedSlides);
+    // Save immediately
+    onUpdate('heroSlides', updatedSlides);
   };
 
   // Handle file upload for editing slide
@@ -791,11 +830,11 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
     return (
       <HeroSectionContainer
         id="home"
-        backgroundImage={slides.length > 0 && slides[currentSlideIndex]?.imageUrl
-          ? slides[currentSlideIndex].imageUrl
+        backgroundImage={activeSlides.length > 0 && activeSlides[currentSlideIndex]?.imageUrl
+          ? activeSlides[currentSlideIndex].imageUrl
           : `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`}
       >
-        <Overlay overlayOpacity={slides[currentSlideIndex]?.overlayOpacity ?? 0.6} />
+        <Overlay overlayOpacity={activeSlides[currentSlideIndex]?.overlayOpacity ?? 0.6} />
         <EditModeContainer>
           <EditFormContainer>
             <EditFormTitle>Edit Hero Slides</EditFormTitle>
@@ -936,7 +975,37 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
                     <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
                       <strong>Image:</strong> {slide.imageUrl ? '✓ Set' : '✗ Missing'}
                     </p>
+                    <div style={{ marginBottom: '0.75rem', padding: '0.5rem', background: slide.active === false ? '#fee2e2' : '#d1fae5', borderRadius: '6px', fontSize: '0.875rem' }}>
+                      <strong>Status:</strong> {slide.active === false ? '❌ Inactive (hidden from carousel)' : '✅ Active (visible in carousel)'}
+                    </div>
+                    <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: 500 }}>Order:</span>
+                      <Button 
+                        onClick={() => handleMoveSlide(slide.id, 'up')} 
+                        className="bg-gray-500 hover:bg-gray-600 text-white"
+                        disabled={index === 0}
+                        style={{ opacity: index === 0 ? 0.5 : 1, cursor: index === 0 ? 'not-allowed' : 'pointer', padding: '0.5rem', minWidth: 'auto' }}
+                        title="Move up"
+                      >
+                        <Icon name="chevronUp" size={18} />
+                      </Button>
+                      <Button 
+                        onClick={() => handleMoveSlide(slide.id, 'down')} 
+                        className="bg-gray-500 hover:bg-gray-600 text-white"
+                        disabled={index === tempSlides.length - 1}
+                        style={{ opacity: index === tempSlides.length - 1 ? 0.5 : 1, cursor: index === tempSlides.length - 1 ? 'not-allowed' : 'pointer', padding: '0.5rem', minWidth: 'auto' }}
+                        title="Move down"
+                      >
+                        <Icon name="chevronDown" size={18} />
+                      </Button>
+                      <span style={{ fontSize: '0.875rem', color: '#6b7280', marginLeft: '0.5rem' }}>
+                        Position {index + 1} of {tempSlides.length}
+                      </span>
+                    </div>
                     <AdminButtonsContainer>
+                      <Button onClick={() => handleToggleSlideActive(slide.id)} className={slide.active === false ? "bg-green-600 hover:bg-green-700 text-white" : "bg-orange-500 hover:bg-orange-600 text-white"}>
+                        {slide.active === false ? '✅ Activate' : '❌ Deactivate'}
+                      </Button>
                       <Button onClick={() => setEditingSlide({ ...slide })} className="bg-yellow-500 hover:bg-yellow-600 text-white">
                         <Icon name="edit" className="mr-1" /> Edit
                       </Button>
@@ -1063,7 +1132,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
     );
   }
 
-  if (slides.length === 0) {
+  if (activeSlides.length === 0) {
     return (
       <HeroSectionContainer
         id="home"
@@ -1079,7 +1148,7 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
     );
   }
 
-  const currentSlide = slides[currentSlideIndex];
+  const currentSlide = activeSlides[currentSlideIndex] || activeSlides[0];
 
   // Handle smooth scroll for anchor links
   const handleSmoothScroll = (e, href) => {
@@ -1157,25 +1226,25 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
         </CtaButtons>
       </ContentWrapper>
 
-      {slides.length > 1 && (
+      {activeSlides.length > 1 && (
         <>
           <CarouselControl 
             className="left" 
-            onClick={() => handleManualNavigate((currentSlideIndex - 1 + slides.length) % slides.length)}
+            onClick={() => handleManualNavigate((currentSlideIndex - 1 + activeSlides.length) % activeSlides.length)}
             aria-label="Previous slide"
           >
             <Icon name="chevronLeft" size={24} />
           </CarouselControl>
           <CarouselControl 
             className="right" 
-            onClick={() => handleManualNavigate((currentSlideIndex + 1) % slides.length)}
+            onClick={() => handleManualNavigate((currentSlideIndex + 1) % activeSlides.length)}
             aria-label="Next slide"
           >
             <Icon name="chevronRight" size={24} />
           </CarouselControl>
 
           <DotIndicators role="tablist" aria-label="Slide indicators">
-            {slides.map((_, index) => (
+            {activeSlides.map((_, index) => (
               <Dot
                 key={index}
                 className={index === currentSlideIndex ? "active" : ""}
