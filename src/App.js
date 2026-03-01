@@ -248,6 +248,14 @@ const App = () => {
 
   // Firestore document path: artifacts/{appId}/public/church_website
   const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'local-dev-app-id';
+  
+  // Debug: Log the app ID being used (remove in production if desired)
+  useEffect(() => {
+    console.log('🔍 Firestore App ID:', appId);
+    console.log('🔍 Window.__app_id:', typeof window !== 'undefined' ? window.__app_id : 'undefined');
+    console.log('🔍 Firestore path: artifacts/' + appId + '/public/church_website');
+  }, [appId]);
+  
   // Note: Document references must have an even number of segments (collection/doc/collection/doc)
   const churchDocRef = db ? doc(db, 'artifacts', appId, 'public', 'church_website') : null;
 
@@ -255,32 +263,62 @@ const App = () => {
   useEffect(() => {
     if (!churchDocRef || loadingFirebase) return;
 
+    console.log('📡 Listening to Firestore document:', 'artifacts/' + appId + '/public/church_website');
+
     const unsubscribe = onSnapshot(churchDocRef, (docSnap) => {
+      console.log('📥 Firestore snapshot received. Exists:', docSnap.exists());
       if (docSnap.exists()) {
-        setChurchData(docSnap.data());
+        const data = docSnap.data();
+        console.log('✅ Church data loaded from Firestore:', {
+          heroSlides: data.heroSlides?.length || 0,
+          events: data.events?.length || 0,
+          sermons: data.sermons?.length || 0
+        });
+        // Detailed logging for heroSlides
+        if (data.heroSlides) {
+          console.log('📸 Hero Slides Details:', {
+            total: data.heroSlides.length,
+            active: data.heroSlides.filter(s => s.active !== false).length,
+            inactive: data.heroSlides.filter(s => s.active === false).length,
+            slides: data.heroSlides.map(s => ({ id: s.id, title: s.title, active: s.active }))
+          });
+        } else {
+          console.warn('⚠️ heroSlides field is missing or undefined in Firestore data');
+        }
+        setChurchData(data);
       } else {
-        console.log("No church data found, attempting to create initial data.");
+        console.log("⚠️ No church data found at path: artifacts/" + appId + "/public/church_website");
+        console.log("💡 Attempting to create initial data...");
         // Only attempt to set initial data if the current user is an admin
         if (isAdmin) {
+          console.log("👤 User is admin, creating initial data...");
           setDoc(churchDocRef, initialChurchData)
-            .then(() => setChurchData(initialChurchData))
-            .catch((error) => console.error("Error setting initial data:", error));
+            .then(() => {
+              console.log("✅ Initial data created successfully!");
+              setChurchData(initialChurchData);
+            })
+            .catch((error) => {
+              console.error("❌ Error setting initial data:", error);
+              // Fallback to local initial data
+              setChurchData(initialChurchData);
+            });
         } else {
-          console.log("Not an admin, initial data not created. Displaying default initial data.");
+          console.log("👤 Not an admin, displaying default initial data.");
           // For non-admins, if no data exists, they will just see the hardcoded initial data
           setChurchData(initialChurchData);
         }
       }
       setDataLoading(false);
     }, (error) => {
-      console.error("Error fetching church data:", error);
+      console.error("❌ Error fetching church data:", error);
+      console.error("📍 Document path was: artifacts/" + appId + "/public/church_website");
       // Fallback to local initial data so site still renders
       setChurchData(initialChurchData);
       setDataLoading(false);
     });
 
     return () => unsubscribe();
-  }, [churchDocRef, loadingFirebase, isAdmin]); // Added isAdmin to dependency array
+  }, [churchDocRef, loadingFirebase, isAdmin, appId]); // Added appId to dependency array
 
 
   // Mapping of section keys to user-friendly names

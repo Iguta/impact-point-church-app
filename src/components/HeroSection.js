@@ -527,7 +527,20 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
   const [fileInputKey, setFileInputKey] = useState(0); // Key to reset file input
 
   // Filter active slides for display (active !== false, defaults to true)
-  const activeSlides = slides.filter(slide => slide.active !== false);
+  // Also ensure we have unique IDs to prevent duplicate slides
+  const activeSlides = slides
+    .filter(slide => slide.active !== false && slide.id) // Ensure slide has an ID
+    .filter((slide, index, self) => 
+      // Remove duplicates by ID
+      index === self.findIndex(s => s.id === slide.id)
+    );
+
+  // Ensure currentSlideIndex is valid and update if needed (must be before any returns)
+  useEffect(() => {
+    if (activeSlides.length > 0 && currentSlideIndex >= activeSlides.length) {
+      setCurrentSlideIndex(0);
+    }
+  }, [activeSlides.length, currentSlideIndex]);
 
   // Use data directly from Firestore (no Storage fetching needed)
   useEffect(() => {
@@ -536,11 +549,12 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
       // Filter to active slides and reset to first slide if current index is out of bounds
       const active = data.filter(slide => slide.active !== false);
       setCurrentSlideIndex((prev) => {
-        if (prev >= active.length) return 0;
-        // Find the index of the current slide in active slides
-        const currentSlideId = slides[prev]?.id;
-        const newIndex = active.findIndex(s => s.id === currentSlideId);
-        return newIndex >= 0 ? newIndex : 0;
+        // Ensure index is within bounds of active slides
+        if (prev >= active.length) {
+          return 0;
+        }
+        // Clamp to valid range
+        return Math.min(prev, Math.max(0, active.length - 1));
       });
       // Only sync tempSlides when NOT editing (to avoid overwriting user's changes)
       if (!isEditing) {
@@ -1132,6 +1146,13 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
     );
   }
 
+  // Debug logging (remove in production if needed)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Active slides:', activeSlides.map(s => ({ id: s.id, title: s.title })));
+    console.log('Current slide index:', currentSlideIndex);
+    console.log('Current slide:', activeSlides[currentSlideIndex]?.title);
+  }
+
   if (activeSlides.length === 0) {
     return (
       <HeroSectionContainer
@@ -1148,7 +1169,11 @@ const HeroSection = ({ data = [], isEditing, onUpdate }) => {
     );
   }
 
-  const currentSlide = activeSlides[currentSlideIndex] || activeSlides[0];
+  // Ensure we have a valid slide index
+  const validIndex = activeSlides.length > 0 
+    ? Math.max(0, Math.min(currentSlideIndex, activeSlides.length - 1))
+    : 0;
+  const currentSlide = activeSlides[validIndex] || activeSlides[0];
 
   // Handle smooth scroll for anchor links
   const handleSmoothScroll = (e, href) => {
