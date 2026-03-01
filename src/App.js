@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FirebaseProvider, useFirebase } from './context/FirebaseContext';
 import { initialChurchData } from './data/initialChurchData';
 import { Button} from './components/UtilityComponents';
@@ -204,6 +204,13 @@ const App = () => {
   const [currentPath, setCurrentPath] = useState(
     typeof window !== 'undefined' ? window.location.pathname : '/'
   );
+  
+  // Refs to prevent excessive logging
+  const hasLoggedAppIdRef = useRef(false);
+  const hasLoggedListenerRef = useRef(false);
+  const prevDataRef = useRef(null);
+  const hasLoggedMissingRef = useRef(false);
+  const hasLoggedErrorRef = useRef(false);
 
   // Memoize the toast close handler to prevent unnecessary re-renders
   const handleToastClose = useCallback(() => {
@@ -249,11 +256,14 @@ const App = () => {
   // Firestore document path: artifacts/{appId}/public/church_website
   const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'local-dev-app-id';
   
-  // Debug: Log the app ID being used (remove in production if desired)
+  // Debug: Log the app ID being used (only once on mount)
   useEffect(() => {
-    console.log('🔍 Firestore App ID:', appId);
-    console.log('🔍 Window.__app_id:', typeof window !== 'undefined' ? window.__app_id : 'undefined');
-    console.log('🔍 Firestore path: artifacts/' + appId + '/public/church_website');
+    if (!hasLoggedAppIdRef.current) {
+      console.log('🔍 Firestore App ID:', appId);
+      console.log('🔍 Window.__app_id:', typeof window !== 'undefined' ? window.__app_id : 'undefined');
+      console.log('🔍 Firestore path: artifacts/' + appId + '/public/church_website');
+      hasLoggedAppIdRef.current = true;
+    }
   }, [appId]);
   
   // Note: Document references must have an even number of segments (collection/doc/collection/doc)
@@ -263,35 +273,47 @@ const App = () => {
   useEffect(() => {
     if (!churchDocRef || loadingFirebase) return;
 
-    console.log('📡 Listening to Firestore document:', 'artifacts/' + appId + '/public/church_website');
+    // Only log once when setting up the listener
+    if (!hasLoggedListenerRef.current) {
+      console.log('📡 Setting up Firestore listener:', 'artifacts/' + appId + '/public/church_website');
+      hasLoggedListenerRef.current = true;
+    }
 
     const unsubscribe = onSnapshot(churchDocRef, (docSnap) => {
-      console.log('📥 Firestore snapshot received. Exists:', docSnap.exists());
       if (docSnap.exists()) {
         const data = docSnap.data();
-        console.log('✅ Church data loaded from Firestore:', {
-          heroSlides: data.heroSlides?.length || 0,
-          events: data.events?.length || 0,
-          sermons: data.sermons?.length || 0
-        });
-        // Detailed logging for heroSlides
-        if (data.heroSlides) {
-          console.log('📸 Hero Slides Details:', {
-            total: data.heroSlides.length,
-            active: data.heroSlides.filter(s => s.active !== false).length,
-            inactive: data.heroSlides.filter(s => s.active === false).length,
-            slides: data.heroSlides.map(s => ({ id: s.id, title: s.title, active: s.active }))
+        
+        // Only log if data actually changed (compare heroSlides IDs)
+        const prevHeroSlideIds = prevDataRef.current?.heroSlides?.map(s => s.id).join(',');
+        const currentHeroSlideIds = data.heroSlides?.map(s => s.id).join(',');
+        const dataChanged = prevHeroSlideIds !== currentHeroSlideIds;
+        
+        if (dataChanged || !prevDataRef.current) {
+          console.log('✅ Church data loaded from Firestore:', {
+            heroSlides: data.heroSlides?.length || 0,
+            events: data.events?.length || 0,
+            sermons: data.sermons?.length || 0
           });
-        } else {
-          console.warn('⚠️ heroSlides field is missing or undefined in Firestore data');
+          // Detailed logging for heroSlides (only when changed)
+          if (data.heroSlides) {
+            console.log('📸 Hero Slides Details:', {
+              total: data.heroSlides.length,
+              active: data.heroSlides.filter(s => s.active !== false).length,
+              inactive: data.heroSlides.filter(s => s.active === false).length,
+              slides: data.heroSlides.map(s => ({ id: s.id, title: s.title, active: s.active }))
+            });
+          }
+          prevDataRef.current = data;
         }
         setChurchData(data);
       } else {
-        console.log("⚠️ No church data found at path: artifacts/" + appId + "/public/church_website");
-        console.log("💡 Attempting to create initial data...");
+        if (!hasLoggedMissingRef.current) {
+          console.log("⚠️ No church data found at path: artifacts/" + appId + "/public/church_website");
+          console.log("💡 Attempting to create initial data...");
+          hasLoggedMissingRef.current = true;
+        }
         // Only attempt to set initial data if the current user is an admin
         if (isAdmin) {
-          console.log("👤 User is admin, creating initial data...");
           setDoc(churchDocRef, initialChurchData)
             .then(() => {
               console.log("✅ Initial data created successfully!");
@@ -303,15 +325,17 @@ const App = () => {
               setChurchData(initialChurchData);
             });
         } else {
-          console.log("👤 Not an admin, displaying default initial data.");
           // For non-admins, if no data exists, they will just see the hardcoded initial data
           setChurchData(initialChurchData);
         }
       }
       setDataLoading(false);
     }, (error) => {
-      console.error("❌ Error fetching church data:", error);
-      console.error("📍 Document path was: artifacts/" + appId + "/public/church_website");
+      if (!hasLoggedErrorRef.current) {
+        console.error("❌ Error fetching church data:", error);
+        console.error("📍 Document path was: artifacts/" + appId + "/public/church_website");
+        hasLoggedErrorRef.current = true;
+      }
       // Fallback to local initial data so site still renders
       setChurchData(initialChurchData);
       setDataLoading(false);
