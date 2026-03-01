@@ -953,9 +953,10 @@ const EventsSection = ({ data, isEditing, onUpdate }) => {
         ))}
 
         {isEditing && (
-          <EventItem>
-            <EventTitle>Add New Event</EventTitle>
-            <FormSpace>
+          <EventItem isVisible={true} index={sortedEvents.length}>
+            <EventContentWrapper>
+              <EventTitle>Add New Event</EventTitle>
+              <FormSpace>
               <Input
                 type="text"
                 placeholder="Title"
@@ -1027,6 +1028,7 @@ const EventsSection = ({ data, isEditing, onUpdate }) => {
                 <Icon name="plusCircle" className="mr-1" /> Add Event
               </Button>
             </FormSpace>
+            </EventContentWrapper>
           </EventItem>
         )}
         </EventsList>
