@@ -64,6 +64,21 @@
     <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin />
   </head>
   <body>
+    <!-- Set Firestore App ID - Use same for local and production -->
+    <!-- IMPORTANT: Change this to match your production app ID -->
+    <!-- To find production app ID: 
+         1. Check Firebase Console → Firestore → artifacts collection
+         2. Look for the document that has your production data
+         3. Use that document ID as the app ID
+    -->
+    <script>
+      // Set the app ID for Firestore document path
+      // This is the document ID in the 'artifacts' collection in Firestore
+      // To find it: Firebase Console → Firestore → artifacts collection → look at document IDs
+      // Currently set to 'local-dev-app-id' - change this to match production if different
+      window.__app_id = 'local-dev-app-id';
+      console.log('🔧 Firestore App ID set to:', window.__app_id);
+    </script>
     <noscript>
       <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
         <h1>JavaScript Required</h1>
